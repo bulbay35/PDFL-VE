@@ -1,2099 +1,1504 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr" class="h-full">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bird Party - Store and Gold (PC Sürümü)</title>
-<style>
-    body, html {
-        margin: 0; padding: 0; height: 100%; overflow: hidden;
-        font-family: 'Arial', sans-serif;
-        background: linear-gradient(to bottom, #87ceeb, #e0f7fa);
-        transition: background 1s;
-    }
-    canvas {
-        display: block;
-        margin: 0 auto;
-    }
-    .menu {
-        position: fixed;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(0,0,0,0.85);
-        color: #fff;
-        padding: 30px 40px;
-        border-radius: 15px;
-        text-align: center;
-        z-index: 1000;
-        display: none;
-        width: 350px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        border: 2px solid rgba(255,255,255,0.1);
-    }
-    .menu.active {
-        display: block;
-        animation: fadeIn 0.5s;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translate(-50%, -45%); }
-        to { opacity: 1; transform: translate(-50%, -50%); }
-    }
-    button {
-        margin: 12px 0;
-        padding: 14px 25px;
-        font-size: 18px;
-        cursor: pointer;
-        border: none;
-        border-radius: 10px;
-        background: linear-gradient(to right, #f9d71c, #ffc107);
-        color: #333;
-        font-weight: bold;
-        width: 100%;
-        transition: all 0.3s;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-    button:hover {
-        background: linear-gradient(to right, #ffc107, #f9d71c);
-        transform: translateY(-3px);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-    }
-    button:active {
-        transform: translateY(1px);
-    }
-    h1, h2 {
-        margin-bottom: 25px;
-        color: #ffeb3b;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    }
-    h1 {
-        font-size: 2.5em;
-        margin-top: 0;
-    }
-    #scoreDisplay, #goldDisplay, #playerInfoDisplay {
-        position: fixed;
-        top: 20px;
-        font-size: 24px;
-        font-weight: bold;
-        color: white;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-        z-index: 10;
-        padding: 8px 15px;
-        border-radius: 10px;
-        background: rgba(0,0,0,0.4);
-    }
-    #scoreDisplay {
-        left: 20px;
-    }
-    #goldDisplay {
-        right: 20px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    #goldDisplay::before {
-        content: '💰';
-        font-size: 20px;
-    }
-    #playerInfoDisplay {
-        left: 50%;
-        transform: translateX(-50%);
-        top: 20px;
-        font-size: 18px;
-        padding: 5px 10px;
-        background: rgba(0,0,0,0.6);
-        display: none;
-    }
-    .social-links {
-        margin-top: 25px;
-        font-size: 15px;
-    }
-    .social-links a {
-        display: inline-block;
-        color: #fff;
-        margin: 8px 10px;
-        text-decoration: none;
-        transition: transform 0.3s;
-    }
-    .social-links a:hover {
-        transform: scale(1.1);
-    }
-    .instagram { color: #E1306C !important; }
-    .tiktok { color: #69C9D0 !important; }
-    .youtube { color: #FF0000 !important; }
-    .telegram { color: #0088cc !important; }
-    .discord { color: #7289DA !important; }
-    .difficulty-selector {
-        margin: 15px 0;
-    }
-    .difficulty-btn {
-        padding: 10px;
-        margin: 5px;
-        font-size: 14px;
-        width: auto;
-        display: inline-block;
-        background: linear-gradient(to right, #6c757d, #adb5bd);
-        color: white;
-    }
-    .difficulty-btn.selected {
-        background: linear-gradient(to right, #f9d71c, #ffc107);
-        color: #333;
-    }
-    .language-selector {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 10px;
-        margin-top: 20px;
-    }
-    .language-selector button {
-        width: 80px;
-        padding: 10px;
-        font-size: 16px;
-        background: #6c757d;
-        color: white;
-    }
-    .language-selector button.selected {
-        background: #f9d71c;
-        color: #333;
-    }
-    .store-items {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 15px;
-        margin-top: 20px;
-        max-height: 300px;
-        overflow-y: auto;
-        padding: 10px;
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 10px;
-    }
-    .store-item {
-        background: rgba(255,255,255,0.1);
-        padding: 10px;
-        border-radius: 10px;
-        width: 100px;
-        text-align: center;
-        cursor: pointer;
-        transition: transform 0.2s, box-shadow 0.2s;
-        border: 2px solid transparent;
-    }
-    .store-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-    }
-    .store-item.selected-color {
-        border-color: #f9d71c;
-        box-shadow: 0 0 15px rgba(249,215,28,0.7);
-    }
-    .store-item.purchased {
-        border-color: #4CAF50;
-    }
-    .store-item-canvas {
-        width: 60px;
-        height: 60px;
-        margin: 0 auto 8px;
-        display: block;
-        border: 2px solid rgba(0,0,0,0.3);
-        border-radius: 50%;
-    }
-    .store-item-price {
-        font-size: 14px;
-        font-weight: bold;
-        color: #ffeb3b;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
-    }
-    .store-item-price::before {
-        content: '💰';
-        font-size: 12px;
-    }
-    .store-item.purchased .store-item-price {
-        color: #4CAF50;
-    }
-    .store-item.purchased .store-item-price span {
-        display: none;
-    }
-    .store-message {
-        margin-top: 15px;
-        color: #ffeb3b;
-        font-size: 16px;
-        height: 20px;
-    }
-    #pauseButton {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        width: 50px;
-        height: 50px;
-        background: rgba(0,0,0,0.4);
-        border-radius: 50%;
-        border: none;
-        color: white;
-        font-size: 24px;
-        z-index: 100;
-        display: none;
-    }
-    .setting-item {
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 15px;
-    }
-    .setting-item span {
-        font-size: 18px;
-        font-weight: bold;
-    }
-    #volumeSlider {
-        width: 60%;
-    }
-    @media (max-width: 768px) {
-        .menu {
-            width: 90%;
-            padding: 20px 15px;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PDF engineer - Modern PDF & Proje Oluşturma Stüdyosu</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' }
+                    }
+                }
+            }
         }
-        button {
-            padding: 12px;
-            font-size: 16px;
-        }
-        .store-items {
-            max-height: 250px;
-        }
-        .store-item {
-            width: 80px;
-        }
-        .store-item-canvas {
-            width: 50px;
-            height: 50px;
-        }
-        .setting-item {
-            flex-direction: column;
-            gap: 10px;
-        }
-        #volumeSlider {
-            width: 100%;
-        }
-    }
-</style>
+    </script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- jsPDF CDN for client-side PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
+        canvas { touch-action: none; }
+    </style>
 </head>
-<body>
+<body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col overflow-hidden selection:bg-primary-500 selection:text-white">
 
-<canvas id="gameCanvas"></canvas>
+    <!-- APP CONTAINER -->
+    <div id="app" class="h-full flex flex-col w-full relative">
 
-<button id="pauseButton" onclick="togglePause()">⏸</button>
+        <!-- NOTIFICATION TOAST CONTAINER -->
+        <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-<div id="mainMenu" class="menu active">
-    <h1 data-lang="title">Bird Party</h1>
-    <button onclick="showMenu('singleMenu')" data-lang="startGame">Oyuna Başla</button>
-    <button onclick="showStore()" data-lang="store">Mağaza</button>
-    <button onclick="showMenu('settingsMenu')" data-lang="settings">Ayarlar</button>
-    <div class="social-links">
-        <a href="https://www.instagram.com/talhabulut2012/" class="instagram" target="_blank">Instagram</a>
-        <a href="https://www.tiktok.com/@talha.bulut789" class="tiktok" target="_blank">TikTok</a>
-        <a href="https://www.youtube.com/@irontalha12" class="youtube" target="_blank">YouTube</a>
-        <a href="https://t.me/+tmVJa0chY99lNzNk" class="telegram" target="_blank">Telegram chat group</a>
-        <a href="https://t.me/+nnFXwvoxeZU5ZDE0" class="telegram" target="_blank">Telegram Announcement Group</a>
-    </div>
-</div>
+        <!-- VIEW 1: HOME / PROJECTS DASHBOARD -->
+        <div id="view-home" class="flex-1 flex flex-col overflow-y-auto custom-scrollbar">
+            <!-- Header -->
+            <header class="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 z-20 px-4 sm:px-6 py-4 flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary-600 to-indigo-400 flex items-center justify-center text-white shadow-md shadow-primary-500/20 shrink-0">
+                        <i data-lucide="layers" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg sm:text-xl font-bold tracking-tight bg-gradient-to-r from-primary-600 to-indigo-500 bg-clip-text text-transparent">PDF engineer</h1>
+                        <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">Modern Proje & PDF Oluşturma Stüdyosu</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-600 dark:text-slate-300" title="Tema Değiştir">
+                        <i data-lucide="sun" class="w-5 h-5 dark:hidden"></i>
+                        <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
+                    </button>
+                    <button onclick="openNewProjectModal()" class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-3 sm:px-4 py-2.5 rounded-xl font-medium shadow-lg shadow-primary-500/25 transition active:scale-95 text-xs sm:text-sm">
+                        <i data-lucide="plus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                        <span class="hidden xs:inline">Yeni Proje</span>
+                    </button>
+                </div>
+            </header>
 
-<div id="singleMenu" class="menu">
-    <h2 data-lang="singlePlayerMode">Tek Oyunculu Mod</h2>
-    <div class="difficulty-selector">
-        <button class="difficulty-btn" data-difficulty="easy" onclick="setDifficulty('easy')" data-lang="easy">Kolay</button>
-        <button class="difficulty-btn" data-difficulty="normal" onclick="setDifficulty('normal')" data-lang="normal">Normal</button>
-        <button class="difficulty-btn" data-difficulty="hard" onclick="setDifficulty('hard')" data-lang="hard">Zor</button>
-    </div>
-    <button onclick="startGame('single', 'parkur1')" data-lang="forestCourse">Orman Parkuru</button>
-    <button onclick="startGame('single', 'parkur2')" data-lang="iceCourse">Buz Parkuru</button>
-    <button onclick="startGame('single', 'parkur3')" data-lang="desertCourse">Çöl Parkuru</button>
-    <button onclick="startGame('single', 'parkur4')" data-lang="volcanoCourse">Volkan Parkuru</button>
-    <button onclick="startGame('single', 'parkur5')" data-lang="nightCourse">Gece Parkuru</button>
-    <button onclick="showMenu('mainMenu')" data-lang="back">Geri</button>
-</div>
+            <!-- Main Content Area -->
+            <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 md:p-10 flex flex-col gap-6 sm:gap-8">
+                <!-- Welcome Banner -->
+                <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary-600 via-indigo-600 to-purple-600 text-white p-6 sm:p-8 md:p-12 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="relative z-10 max-w-xl">
+                        <span class="inline-block px-3 py-1 rounded-full bg-white/25 backdrop-blur-md text-[10px] sm:text-xs font-semibold mb-3 sm:mb-4 uppercase tracking-wider">Hızlı & Tarayıcı Tabanlı</span>
+                        <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight mb-2 sm:mb-3">Sunumlarınızı ve Posterlerinizi Kolayca Tasarlayın</h2>
+                        <p class="text-slate-100 text-xs sm:text-sm md:text-base leading-relaxed opacity-90">PowerPoint, Paint ve grafik tasarımı tek web uygulamasında birleştirin. Tasarımlarınızı anında çok sayfalı profesyonel PDF olarak indirin.</p>
+                    </div>
+                    <div class="relative z-10 flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <button onclick="openNewProjectModal()" class="bg-white text-slate-900 hover:bg-slate-100 px-6 py-3 rounded-xl font-semibold shadow-lg transition text-center text-sm">Hemen Başla</button>
+                    </div>
+                    <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
+                </div>
 
-<div id="storeMenu" class="menu">
-    <h2 data-lang="store">Mağaza</h2>
-    <p id="storeGoldDisplay" style="font-size: 20px; color: #ffeb3b; margin-bottom: 20px;">💰 Altın: 0</p>
-    <div class="store-items" id="storeItemsContainer">
+                <!-- Projects Section -->
+                <div class="flex flex-col gap-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="folder-kanban" class="w-5 h-5 text-primary-500"></i>
+                            Projelerim
+                        </h3>
+                        <span id="project-count-badge" class="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">0 Proje</span>
+                    </div>
+
+                    <!-- Projects Grid -->
+                    <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="projects-empty" class="hidden flex-col items-center justify-center p-8 sm:p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
+                        <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-4">
+                            <i data-lucide="file-question" class="w-8 h-8"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-1">Henüz hiç proje yok</h4>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">İlk projenizi oluşturarak harika tasarımlar yapmaya başlayın.</p>
+                        <button onclick="openNewProjectModal()" class="bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-md transition text-sm">Yeni Proje Oluştur</button>
+                    </div>
+                </div>
+            </main>
         </div>
-    <div class="store-message" id="storeMessage"></div>
-    <button onclick="showMenu('mainMenu')" data-lang="back">Geri</button>
-</div>
 
-<div id="settingsMenu" class="menu">
-    <h2 data-lang="settings">Ayarlar</h2>
-    <h3 data-lang="language">Dil</h3>
-    <div class="language-selector">
-        <button onclick="setLanguage('en')">EN 🇬🇧</button>
-        <button onclick="setLanguage('tr')">TR 🇹🇷</button>
-        <button onclick="setLanguage('es')">ES 🇪🇸</button>
-        <button onclick="setLanguage('fr')">FR 🇫🇷</button>
-        <button onclick="setLanguage('de')">DE 🇩🇪</button>
-        <button onclick="setLanguage('ar')">AR 🇸🇦</button>
-        <button onclick="setLanguage('zh')">ZH 🇨🇳</button>
-        <button onclick="setLanguage('pt')">PT 🇧🇷</button>
-        <button onclick="setLanguage('ja')">JA 🇯🇵</button>
-        <button onclick="setLanguage('ko')">KO 🇰🇷</button>
-        <button onclick="setLanguage('ru')">RU 🇷🇺</button>
-        <button onclick="setLanguage('it')">IT 🇮🇹</button>
-        <button onclick="setLanguage('hi')">HI 🇮🇳</button>
-        <button onclick="setLanguage('th')">TH 🇹🇭</button>
+        <!-- VIEW 2: EDITOR WORKSPACE -->
+        <div id="view-editor" class="hidden flex-1 flex flex-col h-full overflow-hidden bg-slate-100 dark:bg-slate-950">
+            <!-- Editor Top Toolbar -->
+            <header class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 sm:px-4 flex items-center justify-between z-30 shrink-0 shadow-sm gap-2">
+                <!-- Left: Back & Project Name -->
+                <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <button onclick="backToHome()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition flex items-center gap-1.5 text-sm font-medium shrink-0" title="Projelerime Dön">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                        <span class="hidden sm:inline">Projelerim</span>
+                    </button>
+                    <div class="h-5 w-[1px] bg-slate-200 dark:bg-slate-700 shrink-0"></div>
+                    <div class="flex items-center gap-1.5 group cursor-pointer min-w-0" onclick="renameCurrentProjectPrompt()">
+                        <h2 id="editor-project-title" class="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base truncate">Proje Adı</h2>
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 transition shrink-0"></i>
+                    </div>
+                    <span id="autosave-status" class="text-[10px] text-slate-400 hidden md:inline shrink-0">(Kaydedildi)</span>
+                </div>
+
+                <!-- Center: History & Zoom Controls (Hidden on very small screens) -->
+                <div class="hidden lg:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shrink-0">
+                    <button onclick="undoAction()" class="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition" title="Geri Al (Ctrl+Z)">
+                        <i data-lucide="corner-up-left" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="redoAction()" class="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition" title="Yinele (Ctrl+Y)">
+                        <i data-lucide="corner-up-right" class="w-4 h-4"></i>
+                    </button>
+                    <div class="w-[1px] h-4 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+                    <button onclick="zoomOut()" class="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition" title="Uzaklaştır">
+                        <i data-lucide="zoom-out" class="w-4 h-4"></i>
+                    </button>
+                    <span id="zoom-level-text" class="text-xs font-semibold px-2 text-slate-600 dark:text-slate-300 w-12 text-center">100%</span>
+                    <button onclick="zoomIn()" class="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition" title="Yakınlaştır">
+                        <i data-lucide="zoom-in" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="zoomFit()" class="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition text-xs font-medium px-2" title="Ekrana Sığdır">Fit</button>
+                </div>
+
+                <!-- Right: Actions & Export -->
+                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                    <button onclick="exportToPDF()" class="flex items-center gap-1.5 bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white px-3 sm:px-4 py-2 rounded-xl font-medium shadow-md shadow-primary-500/20 transition active:scale-95 text-xs sm:text-sm">
+                        <i data-lucide="file-down" class="w-4 h-4"></i>
+                        <span class="hidden xs:inline">PDF İndir</span>
+                    </button>
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-600 dark:text-slate-300">
+                        <i data-lucide="sun" class="w-4 h-4 dark:hidden"></i>
+                        <i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Editor Workspace Body -->
+            <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+                <!-- LEFT PANEL: Thumbnails & Page Management (Collapsible or Drawer on mobile) -->
+                <aside id="left-sidebar" class="w-full md:w-56 lg:w-60 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col z-20 shrink-0 transition-all duration-300 max-h-36 md:max-h-none">
+                    <div class="p-2.5 sm:p-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                        <h3 class="font-semibold text-xs text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                            <i data-lucide="book-open" class="w-3.5 h-3.5 text-primary-500"></i>
+                            Sayfalar (<span id="page-count-display">0</span>)
+                        </h3>
+                        <button onclick="addNewPage()" class="p-1 bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 hover:bg-primary-100 rounded-md transition" title="Yeni Sayfa Ekle">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <div id="pages-thumbnail-list" class="flex-1 overflow-y-auto md:overflow-y-auto overflow-x-auto p-2.5 sm:p-3 flex md:flex-col flex-row gap-2.5 custom-scrollbar">
+                        <!-- Thumbnail items generated dynamically -->
+                    </div>
+                    <div class="hidden md:flex p-2.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 items-center justify-between text-xs text-slate-500">
+                        <button onclick="duplicateActivePage()" class="hover:text-primary-600 flex items-center gap-1 transition">
+                            <i data-lucide="copy" class="w-3 h-3"></i> Kopyala
+                        </button>
+                        <button onclick="deleteActivePage()" class="hover:text-rose-600 flex items-center gap-1 transition">
+                            <i data-lucide="trash-2" class="w-3 h-3"></i> Sil
+                        </button>
+                    </div>
+                </aside>
+
+                <!-- CENTER WORKSPACE: Tools & Canvas Container -->
+                <main class="flex-1 flex flex-col overflow-hidden relative bg-slate-100 dark:bg-slate-950">
+                    <!-- Floating Clean Toolbar -->
+                    <div class="absolute top-2 sm:top-3 left-1/2 -translate-x-1/2 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 p-1 sm:p-1.5 rounded-xl shadow-md flex items-center gap-0.5 sm:gap-1 max-w-[95vw] overflow-x-auto custom-scrollbar">
+                        <button onclick="setTool('select')" id="tool-select" class="tool-btn p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition bg-slate-200 dark:bg-slate-800 shrink-0" title="Seç / Taşı">
+                            <i data-lucide="mouse-pointer" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="setTool('text')" id="tool-text" class="tool-btn p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition shrink-0" title="Metin Ekle">
+                            <i data-lucide="type" class="w-4 h-4"></i>
+                        </button>
+                        <div class="w-[1px] h-4 bg-slate-200 dark:bg-slate-700 mx-0.5 shrink-0"></div>
+                        <button onclick="setTool('rect')" id="tool-rect" class="tool-btn p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition shrink-0" title="Dikdörtgen">
+                            <i data-lucide="square" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="setTool('circle')" id="tool-circle" class="tool-btn p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition shrink-0" title="Daire">
+                            <i data-lucide="circle" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="setTool('arrow')" id="tool-arrow" class="tool-btn p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition shrink-0" title="Ok">
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="setTool('line')" id="tool-line" class="tool-btn p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition shrink-0" title="Çizgi">
+                            <i data-lucide="minus" class="w-4 h-4"></i>
+                        </button>
+                        <div class="w-[1px] h-4 bg-slate-200 dark:bg-slate-700 mx-0.5 shrink-0"></div>
+                        <!-- Pen Tool -->
+                        <div class="relative shrink-0">
+                            <button onclick="setTool('brush')" ondblclick="openToolSettings('brush')" id="tool-brush" class="tool-btn p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition flex items-center gap-1" title="Kalem">
+                                <i data-lucide="pencil" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <!-- Eraser Tool -->
+                        <div class="relative shrink-0">
+                            <button onclick="setTool('eraser')" ondblclick="openToolSettings('eraser')" id="tool-eraser" class="tool-btn p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition flex items-center gap-1" title="Silgi">
+                                <i data-lucide="eraser" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <button onclick="openToolSettings('brush')" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 text-xs shrink-0" title="Ayarlar"><i data-lucide="settings" class="w-3.5 h-3.5"></i></button>
+                        <div class="w-[1px] h-4 bg-slate-200 dark:bg-slate-700 mx-0.5 shrink-0"></div>
+                        <label class="p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition cursor-pointer shrink-0" title="Görsel Yükle">
+                            <i data-lucide="image" class="w-4 h-4"></i>
+                            <input type="file" id="image-upload-input" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                        </label>
+                    </div>
+
+                    <!-- Canvas Scroll Wrapper -->
+                    <div id="canvas-scroll-container" class="flex-1 overflow-auto p-4 sm:p-8 md:p-16 flex items-center justify-center custom-scrollbar">
+                        <div id="canvas-wrapper" class="relative bg-white shadow-xl rounded-md transition-transform origin-center overflow-hidden" style="width: 800px; height: 1131px;">
+                            <canvas id="main-canvas" width="800" height="1131" class="absolute inset-0 w-full h-full cursor-crosshair"></canvas>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- RIGHT PANEL: Object Properties & Inspector -->
+                <aside id="right-sidebar" class="w-full md:w-64 border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col z-20 shrink-0 custom-scrollbar overflow-y-auto max-h-48 md:max-h-none">
+                    <div class="p-2.5 sm:p-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                        <h3 class="font-semibold text-xs text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                            <i data-lucide="sliders" class="w-3.5 h-3.5 text-primary-500"></i>
+                            Özellikler
+                        </h3>
+                        <span id="selected-object-type" class="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">Seçim Yok</span>
+                    </div>
+
+                    <!-- Inspector Content -->
+                    <div id="inspector-content" class="p-3 flex flex-col gap-4 text-xs">
+                        <!-- Default info when nothing selected -->
+                        <div id="inspector-empty" class="text-center py-4 md:py-8 text-slate-400">
+                            <i data-lucide="mouse-pointer-click" class="w-6 h-6 mx-auto mb-2 opacity-50"></i>
+                            <p class="text-[11px]">Düzenlemek için bir nesne seçin.</p>
+                        </div>
+
+                        <!-- Dynamic Inspector Form -->
+                        <div id="inspector-form" class="hidden flex flex-col gap-3">
+                            <!-- Position & Size -->
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-medium text-slate-500">Konum & Boyut</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <span class="text-[9px] text-slate-400">X Konumu</span>
+                                        <input type="number" id="prop-x" onchange="updateSelectedObjectProp('x', this.value)" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs">
+                                    </div>
+                                    <div>
+                                        <span class="text-[9px] text-slate-400">Y Konumu</span>
+                                        <input type="number" id="prop-y" onchange="updateSelectedObjectProp('y', this.value)" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs">
+                                    </div>
+                                    <div>
+                                        <span class="text-[9px] text-slate-400">Genişlik</span>
+                                        <input type="number" id="prop-w" onchange="updateSelectedObjectProp('width', this.value)" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs">
+                                    </div>
+                                    <div>
+                                        <span class="text-[9px] text-slate-400">Yükseklik</span>
+                                        <input type="number" id="prop-h" onchange="updateSelectedObjectProp('height', this.value)" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Text Specific Properties -->
+                            <div id="prop-section-text" class="hidden flex flex-col gap-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-medium text-slate-500">Metin Ayarları</label>
+                                <div>
+                                    <span class="text-[9px] text-slate-400">İçerik</span>
+                                    <textarea id="prop-text-content" oninput="updateSelectedObjectProp('text', this.value)" rows="2" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded p-1.5 text-xs"></textarea>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <span class="text-[9px] text-slate-400">Yazı Boyutu</span>
+                                        <input type="number" id="prop-font-size" onchange="updateSelectedObjectProp('fontSize', this.value)" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs">
+                                    </div>
+                                    <div>
+                                        <span class="text-[9px] text-slate-400">Yazı Tipi</span>
+                                        <select id="prop-font-family" onchange="updateSelectedObjectProp('fontFamily', this.value)" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs">
+                                            <option value="Inter">Inter</option>
+                                            <option value="Arial">Arial</option>
+                                            <option value="Times New Roman">Times New Roman</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <button onclick="toggleTextFormat('bold')" id="btn-format-bold" class="px-2 py-1 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold">B</button>
+                                    <button onclick="toggleTextFormat('italic')" id="btn-format-italic" class="px-2 py-1 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 italic">I</button>
+                                    <button onclick="toggleTextFormat('underline')" id="btn-format-underline" class="px-2 py-1 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 underline">U</button>
+                                </div>
+                            </div>
+
+                            <!-- Color Properties -->
+                            <div class="flex flex-col gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-medium text-slate-500">Renkler</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="flex items-center gap-1.5">
+                                        <input type="color" id="prop-color" onchange="updateSelectedObjectProp('color', this.value)" class="w-6 h-6 rounded border border-slate-200 cursor-pointer">
+                                        <span class="text-[11px] text-slate-600 dark:text-slate-300">Renk</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5" id="prop-fill-container">
+                                        <input type="color" id="prop-fill" onchange="updateSelectedObjectProp('fillColor', this.value)" class="w-6 h-6 rounded border border-slate-200 cursor-pointer">
+                                        <span class="text-[11px] text-slate-600 dark:text-slate-300">Dolgu</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Layer Actions -->
+                            <div class="flex flex-col gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-medium text-slate-500">Katman & İşlemler</label>
+                                <div class="grid grid-cols-2 gap-1.5">
+                                    <button onclick="bringForward()" class="py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded text-[11px] font-medium transition">Öne Al</button>
+                                    <button onclick="sendBackward()" class="py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded text-[11px] font-medium transition">Arkaya Al</button>
+                                </div>
+                                <button onclick="duplicateSelectedObject()" class="w-full py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded text-[11px] font-medium transition flex items-center justify-center gap-1">
+                                    <i data-lucide="copy" class="w-3 h-3"></i> Kopyala
+                                </button>
+                                <button onclick="deleteSelectedObject()" class="w-full py-1 bg-rose-50 dark:bg-rose-950/30 text-rose-600 hover:bg-rose-100 rounded text-[11px] font-medium transition flex items-center justify-center gap-1">
+                                    <i data-lucide="trash-2" class="w-3 h-3"></i> Nesneyi Sil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+
+        <!-- MODAL: New Project -->
+        <div id="modal-new-project" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-2xl shadow-xl overflow-hidden p-6 flex flex-col gap-5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 flex items-center justify-center">
+                            <i data-lucide="folder-plus" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-base text-slate-900 dark:text-white">Yeni Proje Oluştur</h3>
+                            <p class="text-xs text-slate-500">Proje detaylarını belirleyin</p>
+                        </div>
+                    </div>
+                    <button onclick="closeNewProjectModal()" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-3.5">
+                    <div>
+                        <label class="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1 block">Proje Adı</label>
+                        <input type="text" id="input-new-project-name" placeholder="Örn: Okul Sunumum" value="Yeni Proje" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1 block">Sayfa Sayısı</label>
+                        <input type="number" id="input-new-project-pages" min="1" max="50" value="5" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button onclick="closeNewProjectModal()" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">İptal</button>
+                    <button onclick="createProjectSubmit()" class="px-5 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium shadow-md shadow-primary-500/25 transition">Oluştur</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Pen / Eraser Settings -->
+        <div id="modal-tool-settings" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-xs rounded-2xl shadow-xl overflow-hidden p-5 flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                    <h3 id="tool-settings-title" class="font-bold text-sm text-slate-900 dark:text-white">Kalem Ayarları</h3>
+                    <button onclick="closeToolSettings()" class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
+                <div class="flex flex-col gap-3 text-xs">
+                    <div id="setting-color-wrapper">
+                        <label class="text-[11px] text-slate-500 block mb-1">Renk</label>
+                        <input type="color" id="tool-setting-color" value="#1e293b" class="w-full h-8 rounded border border-slate-200 cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-slate-500 block mb-1">Boyut / Kalınlık (<span id="setting-size-val">4</span>px)</label>
+                        <input type="range" id="tool-setting-size" min="1" max="50" value="4" oninput="document.getElementById('setting-size-val').textContent = this.value" class="w-full accent-primary-600">
+                    </div>
+                </div>
+                <div class="flex justify-end pt-1">
+                    <button onclick="saveToolSettings()" class="px-4 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-medium">Tamam</button>
+                </div>
+            </div>
+        </div>
+
     </div>
-    <div class="setting-item">
-        <span data-lang="volume">Ses Düzeyi:</span>
-        <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5">
-        <span id="volumeValue">50%</span>
-    </div>
-    <button onclick="showMenu('mainMenu')" data-lang="back">Geri</button>
-</div>
 
-<div id="pauseMenu" class="menu">
-    <h2 id="pauseMessage" data-lang="gamePaused">Oyun Duraklatıldı</h2>
-    <button onclick="resumeGame()" data-lang="resume">Devam Et</button>
-    <button onclick="returnToMainMenu()" data-lang="mainMenu">Ana Menü</button>
-</div>
-
-<div id="gameOverMenu" class="menu">
-    <h2 data-lang="gameOver">Oyun Bitti!</h2>
-    <p id="finalScoreText" style="font-size: 20px; margin-bottom: 20px;"></p>
-    <button onclick="restartGame()" data-lang="playAgain">Tekrar Oyna</button>
-    <button onclick="returnToMainMenu()" data-lang="mainMenu">Ana Menü</button>
-</div>
-
-<div id="scoreDisplay" data-lang-prefix="score">Skor: 0</div>
-<div id="goldDisplay">0</div>
-<div id="playerInfoDisplay" data-lang-prefix="bird">Kuş: </div>
-
-<script>
-    // Müzik ve ses değişkenleri
-    let mainMenuMusic;
-    let gameMusic;
-    let gameOverMusic;
-    let jumpSound;
-    let coinSound;
-    let hitSound;
-    
-    // Ses seviyeleri için sabitler (artık slider'dan okunacak)
-    const musicVolume = 0.5;
-    const gameMusicVolume = 0.3;
-    const gameOverMusicVolume = 0.6;
-    const jumpVolume = 0.5;
-    const coinVolume = 0.7;
-    const hitVolume = 0.8;
-
-    let globalVolume = localStorage.getItem('globalVolume') || 0.5;
-
-    // Müziği yükleme fonksiyonu
-    function loadMusic() {
-        mainMenuMusic = new Audio('main_menu_music.mp3');
-        gameMusic = new Audio('main_menu_music.mp3'); 
-        gameOverMusic = new Audio('256113_3263906-lq.mp3');
-        jumpSound = new Audio('pixel-jump-319167.mp3');
-        coinSound = new Audio('retro-coin-4-236671.mp3');
-        hitSound = new Audio('hit-sound.mp3');
-
-        // Müzikleri döngüye al
-        mainMenuMusic.loop = true;
-        gameMusic.loop = true;
-
-        const volumeSlider = document.getElementById('volumeSlider');
-        volumeSlider.value = globalVolume;
-        setVolume(globalVolume);
-
-        volumeSlider.oninput = (e) => setVolume(e.target.value);
-    }
-    
-    // Ses seviyelerini ayarlama
-    function setVolume(volume) {
-        globalVolume = parseFloat(volume);
-        
-        mainMenuMusic.volume = globalVolume * musicVolume;
-        gameMusic.volume = globalVolume * gameMusicVolume;
-        gameOverMusic.volume = globalVolume * gameOverMusicVolume;
-        jumpSound.volume = globalVolume * jumpVolume;
-        coinSound.volume = globalVolume * coinVolume;
-        hitSound.volume = globalVolume * hitVolume;
-
-        const volumeValueSpan = document.getElementById('volumeValue');
-        volumeValueSpan.textContent = `${Math.round(globalVolume * 100)}%`;
-
-        localStorage.setItem('globalVolume', globalVolume);
-    }
-
-    // Menü müziğini çalma
-    function playMainMenuMusic() {
-        stopAllMusic();
-        mainMenuMusic.play().catch(e => console.error("Ana menü müziği çalınamadı:", e));
-    }
-
-    // Oyun müziğini çalma
-    function playGameMusic() {
-        stopAllMusic();
-        gameMusic.play().catch(e => console.error("Oyun müziği çalınamadı:", e));
-    }
-
-    // Oyun bitti müziğini çalma
-    function playGameOverMusic() {
-        stopAllMusic();
-        gameOverMusic.currentTime = 0;
-        gameOverMusic.play().catch(e => console.error("Oyun bitti müziği çalınamadı:", e));
-    }
-
-    // Zıplama sesini çalma
-    function playJumpSound() {
-        jumpSound.currentTime = 0;
-        jumpSound.play().catch(e => console.error("Zıplama sesi çalınamadı:", e));
-    }
-
-    // Altın toplama sesini çalma
-    function playCoinSound() {
-        coinSound.currentTime = 0;
-        coinSound.play().catch(e => console.error("Altın sesi çalınamadı:", e));
-    }
-    
-    // Çarpma/ölme sesini çalma
-    function playHitSound() {
-        hitSound.currentTime = 0;
-        hitSound.play().catch(e => console.error("Çarpma sesi çalınamadı:", e));
-    }
-
-    // Tüm müzikleri durdurma
-    function stopAllMusic() {
-        mainMenuMusic.pause();
-        mainMenuMusic.currentTime = 0;
-
-        gameMusic.pause();
-        gameMusic.currentTime = 0;
-
-        gameOverMusic.pause();
-        gameOverMusic.currentTime = 0;
-
-        // Ses efektlerini de durdurabilirsin, isteğe bağlı
-        jumpSound.pause();
-        jumpSound.currentTime = 0;
-        coinSound.pause();
-        coinSound.currentTime = 0;
-        hitSound.pause();
-        hitSound.currentTime = 0;
-    }
-
-    window.addEventListener('load', () => {
-    // Canvas uyumluluk kontrolü
-    if (!ctx.ellipse) {
-        alert("Tarayıcınız oyun için gerekli çizim komutlarını desteklemiyor. Lütfen güncel bir tarayıcı kullanın.");
-    }
-        loadMusic();
-    // Kullanıcı etkileşimi ile ses başlatma
-    document.body.addEventListener("click", () => {
-        try { mainMenuMusic.play(); } catch(e) {}
-    }, { once: true });
-    });
-
-    // Dil Ayarları
-    const translations = {
-        en: {
-            title: "Bird Party",
-            startGame: "Start Game",
-            store: "Store",
-            settings: "Settings",
-            back: "Back",
-            singlePlayerMode: "Single Player Mode",
-            easy: "Easy",
-            normal: "Normal",
-            hard: "Hard",
-            forestCourse: "Forest Course",
-            iceCourse: "Ice Course",
-            desertCourse: "Desert Course",
-            volcanoCourse: "Volcano Course",
-            nightCourse: "Night Course",
-            gamePaused: "Game Paused",
-            resume: "Resume",
-            mainMenu: "Main Menu",
-            gameOver: "Game Over!",
-            playAgain: "Play Again",
-            language: "Language",
-            score: "Score:",
-            bird: "Bird:",
-            yellowBird: "Yellow Bird",
-            blueBird: "Blue Bird",
-            greenBird: "Green Bird",
-            purpleBird: "Purple Bird",
-            redBird: "Red Bird",
-            orangeBird: "Orange Bird",
-            pinkBird: "Pink Bird",
-            turquoiseBird: "Turquoise Bird",
-            grayBird: "Gray Bird",
-            whiteBird: "White Bird",
-            blackBird: "Black Bird",
-            goldBird: "Gold Bird",
-            silverBird: "Silver Bird",
-            selected: "Selected!",
-            purchased: "Purchased!",
-            notEnoughGold: "Not enough gold! You need %s more gold.",
-            gold: "Gold:",
-            yourScore: "Your score: ",
-            volume: "Volume"
-        },
-        tr: {
-            title: "Bird Party",
-            startGame: "Oyuna Başla",
-            store: "Mağaza",
-            settings: "Ayarlar",
-            back: "Geri",
-            singlePlayerMode: "Tek Oyunculu Mod",
-            easy: "Kolay",
-            normal: "Normal",
-            hard: "Zor",
-            forestCourse: "Orman Parkuru",
-            iceCourse: "Buz Parkuru",
-            desertCourse: "Çöl Parkuru",
-            volcanoCourse: "Volkan Parkuru",
-            nightCourse: "Gece Parkuru",
-            gamePaused: "Oyun Duraklatıldı",
-            resume: "Devam Et",
-            mainMenu: "Ana Menü",
-            gameOver: "Oyun Bitti!",
-            playAgain: "Tekrar Oyna",
-            language: "Dil",
-            score: "Skor:",
-            bird: "Kuş:",
-            yellowBird: "Sarı Kuş",
-            blueBird: "Mavi Kuş",
-            greenBird: "Yeşil Kuş",
-            purpleBird: "Mor Kuş",
-            redBird: "Kırmızı Kuş",
-            orangeBird: "Turuncu Kuş",
-            pinkBird: "Pembe Kuş",
-            turquoiseBird: "Turkuaz Kuş",
-            grayBird: "Gri Kuş",
-            whiteBird: "Beyaz Kuş",
-            blackBird: "Siyah Kuş",
-            goldBird: "Altın Kuş",
-            silverBird: "Gümüş Kuş",
-            selected: "Seçildi!",
-            purchased: "Satın alındı!",
-            notEnoughGold: "Yetersiz altın! %s altın daha gerekli.",
-            gold: "Altın:",
-            yourScore: "Skorunuz: ",
-            volume: "Ses Düzeyi"
-        },
-        es: {
-            title: "Fiesta de Pájaros",
-            startGame: "Iniciar Juego",
-            store: "Tienda",
-            settings: "Configuración",
-            back: "Volver",
-            singlePlayerMode: "Modo Un Jugador",
-            easy: "Fácil",
-            normal: "Normal",
-            hard: "Difícil",
-            forestCourse: "Curso del Bosque",
-            iceCourse: "Curso del Hielo",
-            desertCourse: "Curso del Desierto",
-            volcanoCourse: "Curso del Volcán",
-            nightCourse: "Curso de la Noche",
-            gamePaused: "Juego en Pausa",
-            resume: "Reanudar",
-            mainMenu: "Menú Principal",
-            gameOver: "¡Juego Terminado!",
-            playAgain: "Jugar de Nuevo",
-            language: "Idioma",
-            score: "Puntuación:",
-            bird: "Pájaro:",
-            yellowBird: "Pájaro Amarillo",
-            blueBird: "Pájaro Azul",
-            greenBird: "Pájaro Verde",
-            purpleBird: "Pájaro Morado",
-            redBird: "Pájaro Rojo",
-            orangeBird: "Pájaro Naranja",
-            pinkBird: "Pájaro Rosa",
-            turquoiseBird: "Pájaro Turquesa",
-            grayBird: "Pájaro Gris",
-            whiteBird: "Pájaro Blanco",
-            blackBird: "Pájaro Negro",
-            goldBird: "Pájaro de Oro",
-            silverBird: "Pájaro de Plata",
-            selected: "¡Seleccionado!",
-            purchased: "¡Comprado!",
-            notEnoughGold: "¡No hay suficiente oro! Necesitas %s oro más.",
-            gold: "Oro:",
-            yourScore: "Tu puntuación: ",
-            volume: "Volumen"
-        },
-        fr: {
-            title: "Fête des Oiseaux",
-            startGame: "Démarrer le Jeu",
-            store: "Boutique",
-            settings: "Paramètres",
-            back: "Retour",
-            singlePlayerMode: "Mode Un Joueur",
-            easy: "Facile",
-            normal: "Normal",
-            hard: "Difficile",
-            forestCourse: "Parcours Forêt",
-            iceCourse: "Parcours Glace",
-            desertCourse: "Parcours Désert",
-            volcanoCourse: "Parcours Volcan",
-            nightCourse: "Parcours Nuit",
-            gamePaused: "Jeu en Pause",
-            resume: "Reprendre",
-            mainMenu: "Menu Principal",
-            gameOver: "Jeu Terminé !",
-            playAgain: "Rejouer",
-            language: "Langue",
-            score: "Score:",
-            bird: "Oiseau:",
-            yellowBird: "Oiseau Jaune",
-            blueBird: "Oiseau Bleu",
-            greenBird: "Oiseau Vert",
-            purpleBird: "Oiseau Violet",
-            redBird: "Oiseau Rouge",
-            orangeBird: "Oiseau Orange",
-            pinkBird: "Oiseau Rose",
-            turquoiseBird: "Oiseau Turkuaz",
-            grayBird: "Oiseau Gris",
-            whiteBird: "Oiseau Blanc",
-            blackBird: "Oiseau Noir",
-            goldBird: "Oiseau d'Or",
-            silverBird: "Oiseau d'Argent",
-            selected: "Sélectionné !",
-            purchased: "Acheté !",
-            notEnoughGold: "Pas assez d'or ! Il vous faut %s or de plus.",
-            gold: "Or:",
-            yourScore: "Votre score: ",
-            volume: "Volume"
-        },
-        de: {
-            title: "Vogel-Party",
-            startGame: "Spiel starten",
-            store: "Laden",
-            settings: "Einstellungen",
-            back: "Zurück",
-            singlePlayerMode: "Einzelspieler-Modus",
-            easy: "Leicht",
-            normal: "Normal",
-            hard: "Schwer",
-            forestCourse: "Waldkurs",
-            iceCourse: "Eiskurs",
-            desertCourse: "Wüstenkurs",
-            volcanoCourse: "Vulkankurs",
-            nightCourse: "Nachtkurs",
-            gamePaused: "Spiel pausiert",
-            resume: "Fortsetzen",
-            mainMenu: "Hauptmenü",
-            gameOver: "Spiel vorbei!",
-            playAgain: "Erneut spielen",
-            language: "Sprache",
-            score: "Punktzahl:",
-            bird: "Vogel:",
-            yellowBird: "Gelber Vogel",
-            blueBird: "Blauer Vogel",
-            greenBird: "Grüner Vogel",
-            purpleBird: "Lila Vogel",
-            redBird: "Roter Vogel",
-            orangeBird: "Oranger Vogel",
-            pinkBird: "Rosa Vogel",
-            turquoiseBird: "Türkiser Vogel",
-            grayBird: "Grauer Vogel",
-            whiteBird: "Weißer Vogel",
-            blackBird: "Schwarzer Vogel",
-            goldBird: "Goldener Vogel",
-            silverBird: "Silberner Vogel",
-            selected: "Ausgewählt!",
-            purchased: "Gekauft!",
-            notEnoughGold: "Nicht genug Gold! Sie brauchen %s mehr Gold.",
-            gold: "Gold:",
-            yourScore: "Ihre Punktzahl: ",
-            volume: "Lautstärke"
-        },
-        zh: {
-            title: "鸟派对",
-            startGame: "开始游戏",
-            store: "商店",
-            settings: "设置",
-            back: "返回",
-            singlePlayerMode: "单人模式",
-            easy: "简单",
-            normal: "正常",
-            hard: "困难",
-            forestCourse: "森林赛道",
-            iceCourse: "冰雪赛道",
-            desertCourse: "沙漠赛道",
-            volcanoCourse: "火山赛道",
-            nightCourse: "夜晚赛道",
-            gamePaused: "游戏暂停",
-            resume: "继续",
-            mainMenu: "主菜单",
-            gameOver: "游戏结束！",
-            playAgain: "再玩一次",
-            language: "语言",
-            score: "分数:",
-            bird: "鸟:",
-            yellowBird: "黄色小鸟",
-            blueBird: "蓝色小鸟",
-            greenBird: "绿色小鸟",
-            purpleBird: "紫色小鸟",
-            redBird: "红色小鸟",
-            orangeBird: "橙色小鸟",
-            pinkBird: "粉色小鸟",
-            turquoiseBird: "青色小鸟",
-            grayBird: "灰色小鸟",
-            whiteBird: "白色小鸟",
-            blackBird: "黑色小鸟",
-            goldBird: "金色小鸟",
-            silverBird: "银色小鸟",
-            selected: "已选择！",
-            purchased: "已购买！",
-            notEnoughGold: "金币不足！还需要 %s 金币。",
-            gold: "金币:",
-            yourScore: "你的分数: ",
-            volume: "音量"
-        },
-        pt: {
-            title: "Festa dos Pássaros",
-            startGame: "Iniciar Jogo",
-            store: "Loja",
-            settings: "Configurações",
-            back: "Voltar",
-            singlePlayerMode: "Modo Um Jogador",
-            easy: "Fácil",
-            normal: "Normal",
-            hard: "Difícil",
-            forestCourse: "Curso da Floresta",
-            iceCourse: "Curso de Gelo",
-            desertCourse: "Curso do Deserto",
-            volcanoCourse: "Curso do Vulcão",
-            nightCourse: "Curso Noturno",
-            gamePaused: "Jogo Pausado",
-            resume: "Continuar",
-            mainMenu: "Menu Principal",
-            gameOver: "Fim de Jogo!",
-            playAgain: "Jogar Novamente",
-            language: "Idioma",
-            score: "Pontuação:",
-            bird: "Pássaro:",
-            yellowBird: "Pássaro Amarelo",
-            blueBird: "Pássaro Azul",
-            greenBird: "Pássaro Verde",
-            purpleBird: "Pássaro Roxo",
-            redBird: "Pássaro Vermelho",
-            orangeBird: "Pássaro Laranja",
-            pinkBird: "Pássaro Rosa",
-            turquoiseBird: "Pássaro Turquesa",
-            grayBird: "Pássaro Cinza",
-            whiteBird: "Pássaro Branco",
-            blackBird: "Pássaro Preto",
-            goldBird: "Pássaro Dourado",
-            silverBird: "Pássaro Prateado",
-            selected: "Selecionado!",
-            purchased: "Comprado!",
-            notEnoughGold: "Ouro insuficiente! Você precisa de mais %s ouro.",
-            gold: "Ouro:",
-            yourScore: "Sua pontuação: ",
-            volume: "Volume"
-        },
-        ja: {
-            title: "バードパーティー",
-            startGame: "ゲーム開始",
-            store: "ストア",
-            settings: "設定",
-            back: "戻る",
-            singlePlayerMode: "シングルプレイヤーモード",
-            easy: "簡単",
-            normal: "普通",
-            hard: "難しい",
-            forestCourse: "森コース",
-            iceCourse: "氷コース",
-            desertCourse: "砂漠コース",
-            volcanoCourse: "火山コース",
-            nightCourse: "夜コース",
-            gamePaused: "ゲーム一時停止",
-            resume: "再開",
-            mainMenu: "メインメニュー",
-            gameOver: "ゲームオーバー！",
-            playAgain: "もう一度遊ぶ",
-            language: "言語",
-            score: "スコア:",
-            bird: "鳥:",
-            yellowBird: "黄色い鳥",
-            blueBird: "青い鳥",
-            greenBird: "緑の鳥",
-            purpleBird: "紫の鳥",
-            redBird: "赤い鳥",
-            orangeBird: "オレンジの鳥",
-            pinkBird: "ピンクの鳥",
-            turquoiseBird: "ターコイズの鳥",
-            grayBird: "灰色の鳥",
-            whiteBird: "白い鳥",
-            blackBird: "黒い鳥",
-            goldBird: "金の鳥",
-            silverBird: "銀の鳥",
-            selected: "選択済み！",
-            purchased: "購入済み！",
-            notEnoughGold: "ゴールドが足りません！あと %s ゴールド必要です。",
-            gold: "ゴールド:",
-            yourScore: "あなたのスコア: ",
-            volume: "音量"
-        },
-        ko: {
-            title: "버드 파티",
-            startGame: "게임 시작",
-            store: "상점",
-            settings: "설정",
-            back: "뒤로",
-            singlePlayerMode: "싱글 플레이 모드",
-            easy: "쉬움",
-            normal: "보통",
-            hard: "어려움",
-            forestCourse: "숲 코스",
-            iceCourse: "얼음 코스",
-            desertCourse: "사막 코스",
-            volcanoCourse: "화산 코스",
-            nightCourse: "밤 코스",
-            gamePaused: "게임 일시정지",
-            resume: "계속하기",
-            mainMenu: "메인 메뉴",
-            gameOver: "게임 오버!",
-            playAgain: "다시 하기",
-            language: "언어",
-            score: "점수:",
-            bird: "새:",
-            yellowBird: "노란 새",
-            blueBird: "파란 새",
-            greenBird: "초록 새",
-            purpleBird: "보라 새",
-            redBird: "빨간 새",
-            orangeBird: "주황 새",
-            pinkBird: "분홍 새",
-            turquoiseBird: "청록색 새",
-            grayBird: "회색 새",
-            whiteBird: "하얀 새",
-            blackBird: "검은 새",
-            goldBird: "금 새",
-            silverBird: "은 새",
-            selected: "선택됨!",
-            purchased: "구매 완료!",
-            notEnoughGold: "골드가 부족합니다! %s 골드가 더 필요합니다.",
-            gold: "골드:",
-            yourScore: "당신의 점수: ",
-            volume: "볼륨"
-        },
-        ru: {
-            title: "Птичья вечеринка",
-            startGame: "Начать игру",
-            store: "Магазин",
-            settings: "Настройки",
-            back: "Назад",
-            singlePlayerMode: "Одиночный режим",
-            easy: "Легко",
-            normal: "Нормально",
-            hard: "Сложно",
-            forestCourse: "Лесная трасса",
-            iceCourse: "Ледяная трасса",
-            desertCourse: "Пустынная трасса",
-            volcanoCourse: "Вулканическая трасса",
-            nightCourse: "Ночная трасса",
-            gamePaused: "Игра на паузе",
-            resume: "Продолжить",
-            mainMenu: "Главное меню",
-            gameOver: "Игра окончена!",
-            playAgain: "Играть снова",
-            language: "Язык",
-            score: "Счет:",
-            bird: "Птица:",
-            yellowBird: "Желтая птица",
-            blueBird: "Синяя птица",
-            greenBird: "Зеленая птица",
-            purpleBird: "Фиолетовая птица",
-            redBird: "Красная птица",
-            orangeBird: "Оранжевая птица",
-            pinkBird: "Розовая птица",
-            turquoiseBird: "Бирюзовая птица",
-            grayBird: "Серая птица",
-            whiteBird: "Белая птица",
-            blackBird: "Черная птица",
-            goldBird: "Золотая птица",
-            silverBird: "Серебряная птица",
-            selected: "Выбрано!",
-            purchased: "Куплено!",
-            notEnoughGold: "Недостаточно золота! Нужно еще %s золота.",
-            gold: "Золото:",
-            yourScore: "Ваш счет: ",
-            volume: "Громкость"
-        },
-        ar: {
-            title: "حفلة الطيور",
-            startGame: "بدء اللعب",
-            store: "المتجر",
-            settings: "الإعدادات",
-            back: "رجوع",
-            singlePlayerMode: "وضع اللاعب الفردي",
-            easy: "سهل",
-            normal: "عادي",
-            hard: "صعب",
-            forestCourse: "مسار الغابة",
-            iceCourse: "مسار الثلج",
-            desertCourse: "مسار الصحراء",
-            volcanoCourse: "مسار البركان",
-            nightCourse: "مسار الليل",
-            gamePaused: "تم إيقاف اللعبة مؤقتاً",
-            resume: "استئناف",
-            mainMenu: "القائمة الرئيسية",
-            gameOver: "انتهت اللعبة!",
-            playAgain: "العب مرة أخرى",
-            language: "اللغة",
-            score: "النقاط:",
-            bird: "الطائر:",
-            yellowBird: "طائر أصفر",
-            blueBird: "طائر أزرق",
-            greenBird: "طائر أخضر",
-            purpleBird: "طائر بنفسجي",
-            redBird: "طائر أحمر",
-            orangeBird: "طائر برتقالي",
-            pinkBird: "طائر وردي",
-            turquoiseBird: "طائر فيروزي",
-            grayBird: "طائر رمادي",
-            whiteBird: "طائر أبيض",
-            blackBird: "طائر أسود",
-            goldBird: "طائر ذهبي",
-            silverBird: "طائر فضي",
-            selected: "تم الاختيار!",
-            purchased: "تم الشراء!",
-            notEnoughGold: "الذهب غير كافٍ! تحتاج إلى %s ذهب إضافي.",
-            gold: "الذهب:",
-            yourScore: "نقاطك: ",
-            volume: "الصوت"
-        },
-        hi: {
-            title: "बर्ड पार्टी",
-            startGame: "खेल शुरू करें",
-            store: "दुकान",
-            settings: "सेटिंग्स",
-            back: "वापस",
-            singlePlayerMode: "एकल खिलाड़ी मोड",
-            easy: "आसान",
-            normal: "सामान्य",
-            hard: "मुश्किल",
-            forestCourse: "वन पथ",
-            iceCourse: "बर्फ पथ",
-            desertCourse: "रेगिस्तान पथ",
-            volcanoCourse: "ज्वालामुखी पथ",
-            nightCourse: "रात का पथ",
-            gamePaused: "खेल रोका गया",
-            resume: "जारी रखें",
-            mainMenu: "मुख्य मेनू",
-            gameOver: "खेल खत्म!",
-            playAgain: "फिर से खेलें",
-            language: "भाषा",
-            score: "स्कोर:",
-            bird: "पक्षी:",
-            yellowBird: "पीला पक्षी",
-            blueBird: "नीला पक्षी",
-            greenBird: "हरा पक्षी",
-            purpleBird: "बैंगनी पक्षी",
-            redBird: "लाल पक्षी",
-            orangeBird: "नारंगी पक्षी",
-            pinkBird: "गुलाबी पक्षी",
-            turquoiseBird: "फ़िरोज़ा पक्षी",
-            grayBird: "ग्रे पक्षी",
-            whiteBird: "सफेद पक्षी",
-            blackBird: "काला पक्षी",
-            goldBird: "सोने का पक्षी",
-            silverBird: "चांदी का पक्षी",
-            selected: "चुना गया!",
-            purchased: "खरीदा गया!",
-            notEnoughGold: "पर्याप्त सोना नहीं है! आपको %s और सोना चाहिए।",
-            gold: "सोना:",
-            yourScore: "आपका स्कोर: ",
-            volume: "वॉल्यूम"
-        },
-        it: {
-            title: "Bird Party",
-            startGame: "Inizia Gioco",
-            store: "Negozio",
-            settings: "Impostazioni",
-            back: "Indietro",
-            singlePlayerMode: "Modalità Giocatore Singolo",
-            easy: "Facile",
-            normal: "Normale",
-            hard: "Difficile",
-            forestCourse: "Percorso Foresta",
-            iceCourse: "Percorso Ghiaccio",
-            desertCourse: "Percorso Deserto",
-            volcanoCourse: "Percorso Vulcano",
-            nightCourse: "Percorso Notturno",
-            gamePaused: "Gioco in Pausa",
-            resume: "Riprendi",
-            mainMenu: "Menu Principale",
-            gameOver: "Game Over!",
-            playAgain: "Gioca Ancora",
-            language: "Lingua",
-            score: "Punteggio:",
-            bird: "Uccello:",
-            yellowBird: "Uccello Giallo",
-            blueBird: "Uccello Blu",
-            greenBird: "Uccello Verde",
-            purpleBird: "Uccello Viola",
-            redBird: "Uccello Rosso",
-            orangeBird: "Uccello Arancione",
-            pinkBird: "Uccello Rosa",
-            turquoiseBird: "Uccello Turchese",
-            grayBird: "Uccello Grigio",
-            whiteBird: "Uccello Bianco",
-            blackBird: "Uccello Nero",
-            goldBird: "Uccello d'Oro",
-            silverBird: "Uccello d'Argento",
-            selected: "Selezionato!",
-            purchased: "Acquistato!",
-            notEnoughGold: "Oro insufficiente! Hai bisogno di altri %s oro.",
-            gold: "Oro:",
-            yourScore: "Il tuo punteggio: ",
-            volume: "Volume"
-        },
-        th: {
-            title: "ปาร์ตี้ของนก",
-            startGame: "เริ่มเกม",
-            store: "ร้านค้า",
-            settings: "การตั้งค่า",
-            back: "ย้อนกลับ",
-            singlePlayerMode: "โหมดผู้เล่นเดี่ยว",
-            easy: "ง่าย",
-            normal: "ปกติ",
-            hard: "ยาก",
-            forestCourse: "เส้นทางป่า",
-            iceCourse: "เส้นทางน้ำแข็ง",
-            desertCourse: "เส้นทางทะเลทราย",
-            volcanoCourse: "เส้นทางภูเขาไฟ",
-            nightCourse: "เส้นทางกลางคืน",
-            gamePaused: "เกมหยุดชั่วคราว",
-            resume: "เล่นต่อ",
-            mainMenu: "เมนูหลัก",
-            gameOver: "จบเกม!",
-            playAgain: "เล่นอีกครั้ง",
-            language: "ภาษา",
-            score: "คะแนน:",
-            bird: "นก:",
-            yellowBird: "นกสีเหลือง",
-            blueBird: "นกสีฟ้า",
-            greenBird: "นกสีเขียว",
-            purpleBird: "นกสีม่วง",
-            redBird: "นกสีแดง",
-            orangeBird: "นกสีส้ม",
-            pinkBird: "นกสีชมพู",
-            turquoiseBird: "นกสีฟ้าอมเขียว",
-            grayBird: "นกสีเทา",
-            whiteBird: "นกสีขาว",
-            blackBird: "นกสีดำ",
-            goldBird: "นกสีทอง",
-            silverBird: "นกสีเงิน",
-            selected: "เลือกแล้ว!",
-            purchased: "ซื้อแล้ว!",
-            notEnoughGold: "ทองไม่พอ! คุณต้องการอีก %s ทอง",
-            gold: "ทอง:",
-            yourScore: "คะแนนของคุณ: ",
-            volume: "ระดับเสียง"
-        }
-    };
-
-    let currentLanguage = localStorage.getItem('language') || 'en';
-
-    function setLanguage(lang) {
-        currentLanguage = lang;
-        localStorage.setItem('language', lang);
-        updateUI();
-    }
-
-    function updateUI() {
-        const elements = document.querySelectorAll('[data-lang]');
-        elements.forEach(el => {
-            const key = el.dataset.lang;
-            if (translations[currentLanguage][key]) {
-                el.textContent = translations[currentLanguage][key];
-            }
-        });
-
-        const prefixElements = document.querySelectorAll('[data-lang-prefix]');
-        prefixElements.forEach(el => {
-            const key = el.dataset.langPrefix;
-            const text = translations[currentLanguage][key];
-            const originalValue = el.textContent.split(':').pop().trim();
-            el.textContent = text + " " + originalValue;
-        });
-
-        document.querySelector('[data-lang="forestCourse"]').textContent = translations[currentLanguage].forestCourse;
-        document.querySelector('[data-lang="iceCourse"]').textContent = translations[currentLanguage].iceCourse;
-        document.querySelector('[data-lang="desertCourse"]').textContent = translations[currentLanguage].desertCourse;
-        document.querySelector('[data-lang="volcanoCourse"]').textContent = translations[currentLanguage].volcanoCourse;
-        document.querySelector('[data-lang="nightCourse"]').textContent = translations[currentLanguage].nightCourse;
-        document.getElementById('pauseMessage').textContent = translations[currentLanguage].gamePaused;
-        document.getElementById('storeGoldDisplay').textContent = `${translations[currentLanguage].gold} ${player1.gold}`;
-        
-        storeItems[0].name = translations[currentLanguage].yellowBird;
-        storeItems[1].name = translations[currentLanguage].blueBird;
-        storeItems[2].name = translations[currentLanguage].greenBird;
-        storeItems[3].name = translations[currentLanguage].purpleBird;
-        storeItems[4].name = translations[currentLanguage].redBird;
-        storeItems[5].name = translations[currentLanguage].orangeBird;
-        storeItems[6].name = translations[currentLanguage].pinkBird;
-        storeItems[7].name = translations[currentLanguage].turquoiseBird;
-        storeItems[8].name = translations[currentLanguage].grayBird;
-        storeItems[9].name = translations[currentLanguage].whiteBird;
-        storeItems[10].name = translations[currentLanguage].blackBird;
-        storeItems[11].name = translations[currentLanguage].goldBird;
-        storeItems[12].name = translations[currentLanguage].silverBird;
-
-        if (document.getElementById('storeMenu').classList.contains('active')) {
-            renderStoreItems();
-        }
-
-        const langButtons = document.querySelectorAll('.language-selector button');
-        langButtons.forEach(btn => {
-            btn.classList.remove('selected');
-            if (btn.textContent.toLowerCase().includes(currentLanguage)) {
-                btn.classList.add('selected');
-            }
-        });
-    }
-
-    const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    let W = window.innerWidth;
-    let H = window.innerHeight;
-    const DPR = IS_IOS ? Math.min(window.devicePixelRatio || 1, 2) : 1;
-    canvas.width = W * DPR;
-    canvas.height = H * DPR;
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.scale(DPR, DPR);
-
-    const GROUND_HEIGHT = 100;
-    const CEILING_HEIGHT = 50;
-    const PLAYER_INITIAL_X = 100;
-    const PLAYER_WIDTH = 50;
-    const PLAYER_HEIGHT = 50;
-    const OBSTACLE_WIDTH = 40;
-    const MIN_OBSTACLE_HEIGHT = 50;
-    const PLAYER_JUMP_POWER = -12;
-    const GRAVITY = 0.5;
-    const WING_ANIMATION_SPEED = 8;
-    const SCORE_PER_OBSTACLE = 5;
-    const GOLD_SPAWN_FREQUENCY = 200;
-    const GOLD_SPAWN_CHANCE = 0.7;
-    const GOLD_SIZE = 25;
-    const SPIKE_WIDTH = 15;
-    const SPIKE_HEIGHT = 20;
-    const CORNER_RADIUS = 15;
-
-    let gameRunning = false;
-    let gamePaused = false;
-    let currentMode = 'single';
-    let currentParkur = 'parkur1';
-    let currentDifficulty = 'normal';
-    let player1;
-    let obstacles = [];
-    let clouds = [];
-    let goldCoins = [];
-    let gameSpeed = 5;
-    let frameCount = 0;
-    let groundColor = '#2E8B57';
-    let obstacleColor = '#228B22';
-    let gameStartTime;
-    
-    const difficulties = {
-        easy: { speed: 3, obstacleGap: 250, obstacleHeight: 50 },
-        normal: { speed: 5, obstacleGap: 180, obstacleHeight: 80 },
-        hard: { speed: 7, obstacleGap: 120, obstacleHeight: 120 }
-    };
-
-    const parkurs = {
-        parkur1: {
-            ground: '#2E8B57',
-            obstacle: '#228B22',
-            bg: 'linear-gradient(to bottom, #87ceeb, #e0f7fa)',
-            name: 'Orman',
-            detailGround: '#3CB371',
-            detailObstacle: '#2E8B57'
-        },
-        parkur2: {
-            ground: '#4682B4',
-            obstacle: '#696969',
-            bg: 'linear-gradient(to bottom, #4682B4, #B0E0E6)',
-            name: 'Buz',
-            detailGround: '#5F9EA0',
-            detailObstacle: '#808080'
-        },
-        parkur3: {
-            ground: '#8B4513',
-            obstacle: '#A0522D',
-            bg: 'linear-gradient(to bottom, #FFD700, #FFA500)',
-            name: 'Çöl',
-            detailGround: '#A0522D',
-            detailObstacle: '#B8860B'
-        },
-        parkur4: {
-            ground: '#4A0404',
-            obstacle: '#FF4500',
-            bg: 'linear-gradient(to bottom, #8B0000, #FF6347)',
-            name: 'Volkan',
-            detailGround: '#6A0404',
-            detailObstacle: '#FF8C00'
-        },
-        parkur5: {
-            ground: '#1A1A2E',
-            obstacle: '#4CAF50',
-            bg: 'linear-gradient(to bottom, #000000, #1A2B3C)',
-            name: 'Gece',
-            detailGround: '#2A2A3E',
-            detailObstacle: '#76FF03'
-        }
-    };
-
-    const storeItems = [
-        { name: 'Sarı Kuş', color: '#f9d71c', price: 0, default: true, langKey: 'yellowBird' },
-        { name: 'Mavi Kuş', color: '#2196F3', price: 50, langKey: 'blueBird' },
-        { name: 'Yeşil Kuş', color: '#4CAF50', price: 100, langKey: 'greenBird' },
-        { name: 'Mor Kuş', color: '#9C27B0', price: 150, langKey: 'purpleBird' },
-        { name: 'Kırmızı Kuş', color: '#F44336', price: 200, langKey: 'redBird' },
-        { name: 'Turuncu Kuş', color: '#FF9800', price: 250, langKey: 'orangeBird' },
-        { name: 'Pembe Kuş', color: '#E91E63', price: 300, langKey: 'pinkBird' },
-        { name: 'Turkuaz Kuş', color: '#00BCD4', price: 350, langKey: 'turquoiseBird' },
-        { name: 'Gri Kuş', color: '#9E9E9E', price: 400, langKey: 'grayBird' },
-        { name: 'Beyaz Kuş', color: '#FFFFFF', price: 450, langKey: 'whiteBird' },
-        { name: 'Siyah Kuş', color: '#212121', price: 500, langKey: 'blackBird' },
-        { name: 'Altın Kuş', color: '#FFD700', price: 750, langKey: 'goldBird' },
-        { name: 'Gümüş Kuş', color: '#C0C0C0', price: 600, langKey: 'silverBird' },
-    ];
-
-    class Cloud {
-        constructor() {
-            this.x = W + Math.random() * 100;
-            this.y = Math.random() * (H / 3);
-            this.width = 100 + Math.random() * 100;
-            this.height = 50 + Math.random() * 40;
-            this.speed = 0.5 + Math.random() * 1.5;
-        }
-
-        draw() {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-            ctx.beginPath();
-            ctx.ellipse(this.x, this.y, this.width/2, this.height/2, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.ellipse(this.x - this.width/4, this.y + this.height/4, this.width/3, this.height/3, 0, 0, Math.PI * 2);
-            ctx.ellipse(this.x + this.width/4, this.y + this.height/4, this.width/3, this.height/3, 0, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        update() {
-            this.x -= this.speed;
-            if (this.x + this.width < 0) {
-                this.x = W + Math.random() * 100;
-                this.y = Math.random() * (H / 3);
-            }
-        }
-    }
-
-    class Gold {
-        constructor(x, y, value = 1) {
-            this.x = x;
-            this.y = y;
-            this.width = GOLD_SIZE;
-            this.height = GOLD_SIZE;
-            this.value = value;
-            this.collected = false;
-        }
-
-        draw() {
-            ctx.shadowBlur = IS_IOS ? 0 : 15;
-            ctx.shadowColor = '#FFD700';
-
-            const gradient = ctx.createLinearGradient(this.x, this.y, this.x + this.width, this.y + this.height);
-            gradient.addColorStop(0, '#FFD700');
-            gradient.addColorStop(0.5, '#FFEC8B');
-            gradient.addColorStop(1, '#FFD700');
-            ctx.fillStyle = gradient;
-
-            ctx.beginPath();
-            ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.strokeStyle = '#DAA520';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.beginPath();
-            ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 3, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.shadowBlur = 0;
-
-            ctx.fillStyle = '#A0522D';
-            ctx.font = 'bold 18px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('$', this.x + this.width / 2, this.y + this.height / 2);
-        }
-
-        update(speed) {
-            this.x -= speed;
-        }
-    }
-
-    class Player {
-        constructor(x, initialColor, controls, gold = 0, purchasedColors = []) {
-            this.x = x;
-            this.y = H / 2;
-            this.width = PLAYER_WIDTH;
-            this.height = PLAYER_HEIGHT;
-            this.vy = 0;
-            this.gravity = GRAVITY;
-            this.jumpPower = PLAYER_JUMP_POWER;
-            this.color = initialColor;
-            this.controls = controls;
-            this.score = 0;
-            this.gold = gold;
-            this.purchasedColors = purchasedColors;
-            this.alive = true;
-            this.animationFrame = 0;
-            this.wingState = 0;
-        }
-
-        draw(targetCtx = ctx, drawX = this.x, drawY = this.y, scale = 1) {
-            const currentWidth = this.width * scale;
-            const currentHeight = this.height * scale;
-
-            targetCtx.shadowColor = 'rgba(0,0,0,0.4)';
-            targetCtx.shadowBlur = IS_IOS ? 0 : 10;
-            targetCtx.shadowOffsetX = 5;
-            targetCtx.shadowOffsetY = 5;
-
-            if (!this.alive) {
-                targetCtx.fillStyle = this.color + '80';
-            } else {
-                const bodyGradient = targetCtx.createRadialGradient(
-                    drawX + currentWidth * 0.4, drawY + currentHeight * 0.4, 10,
-                    drawX + currentWidth / 2, drawY + currentHeight / 2, currentWidth / 2
-                );
-                bodyGradient.addColorStop(0, '#fff');
-                bodyGradient.addColorStop(1, this.color);
-                targetCtx.fillStyle = bodyGradient;
-            }
-
-            targetCtx.beginPath();
-            targetCtx.ellipse(drawX + currentWidth / 2, drawY + currentHeight / 2,
-                                    currentWidth / 2, currentHeight / 2, 0, 0, Math.PI * 2);
-            targetCtx.fill();
-
-            targetCtx.shadowBlur = 0;
-            targetCtx.shadowOffsetX = 0;
-            targetCtx.shadowOffsetY = 0;
-
-            targetCtx.fillStyle = this.color === '#f9d71c' ? '#ffeb3b' : this.color;
-            const wingX = drawX + currentWidth / 2;
-            const wingY = drawY + currentHeight / 2;
-            const wingWidth = currentWidth * 0.7;
-            const wingHeight = currentHeight * 0.4;
-
-            let wingOffset = 0;
-            if (this.wingState === 0) {
-                wingOffset = -wingHeight * 0.5;
-            } else {
-                wingOffset = wingHeight * 0.5;
-            }
-
-            targetCtx.beginPath();
-            targetCtx.moveTo(wingX, wingY);
-            targetCtx.quadraticCurveTo(
-                wingX - wingWidth / 2, wingY + wingOffset - wingHeight,
-                wingX - wingWidth, wingY + wingOffset
-            );
-            targetCtx.lineTo(wingX, wingY);
-            targetCtx.fill();
-
-            targetCtx.beginPath();
-            targetCtx.moveTo(wingX, wingY);
-            targetCtx.quadraticCurveTo(
-                wingX + wingWidth / 2, wingY + wingOffset - wingHeight,
-                wingX + wingWidth, wingY + wingOffset
-            );
-            targetCtx.lineTo(wingX, wingY);
-            targetCtx.fill();
-
-            targetCtx.fillStyle = '#000';
-            targetCtx.beginPath();
-            ctx.arc(drawX + currentWidth / 1.5, drawY + currentHeight / 3, 5 * scale, 0, Math.PI * 2);
-            targetCtx.fill();
-            
-            targetCtx.fillStyle = '#FF5722';
-            targetCtx.beginPath();
-            ctx.moveTo(drawX + currentWidth, drawY + currentHeight / 2);
-            ctx.lineTo(drawX + currentWidth + (10 * scale), drawY + currentHeight / 2);
-            ctx.lineTo(drawX + currentWidth, drawY + currentHeight / 2 + (5 * scale));
-            targetCtx.fill();
-        }
-
-        update() {
-            this.animationFrame++;
-            if (this.animationFrame % WING_ANIMATION_SPEED === 0) {
-                this.wingState = 1 - this.wingState;
-            }
-
-            this.vy += this.gravity;
-            this.y += this.vy;
-
-            if (this.y + this.height > H - GROUND_HEIGHT) {
-                this.y = H - GROUND_HEIGHT - this.height;
-                this.vy = 0;
-            }
-
-            if (this.y < CEILING_HEIGHT) {
-                this.y = CEILING_HEIGHT;
-                this.vy = this.gravity;
-            }
-        }
-
-        jump() {
-            if (this.alive) {
-                this.vy = this.jumpPower;
-                this.wingState = 0;
-                playJumpSound();
-            }
-        }
-
-        addScore(points) {
-            this.score += points;
-            updateScoreDisplays();
-        }
-
-        addGold(amount) {
-            this.gold += amount;
-            updateGoldDisplay();
-            saveGameData();
-        }
-
-        changeColor(newColor) {
-            this.color = newColor;
-            saveGameData();
-            updatePlayerInfoDisplay();
-        }
-    }
-
-    class Obstacle {
-        constructor(x, width, height, color, isTop = false) {
-            this.x = x;
-            this.width = width;
-            this.height = height;
-            this.color = color;
-            this.passed = false;
-            this.isTop = isTop;
-
-            if (isTop) {
-                this.y = CEILING_HEIGHT;
-            } else {
-                this.y = H - GROUND_HEIGHT - height;
-            }
-        }
-
-        draw() {
-            const gradient = ctx.createLinearGradient(this.x, this.y, this.x + this.width, this.y + this.height);
-            gradient.addColorStop(0, this.color);
-            gradient.addColorStop(1, '#555');
-            ctx.fillStyle = gradient;
-
-            ctx.shadowColor = 'rgba(0,0,0,0.5)';
-            ctx.shadowBlur = IS_IOS ? 0 : 10;
-            ctx.shadowOffsetX = 5;
-            ctx.shadowOffsetY = 5;
-
-            ctx.beginPath();
-            if (this.isTop) {
-                ctx.moveTo(this.x + CORNER_RADIUS, this.y);
-                ctx.lineTo(this.x + this.width - CORNER_RADIUS, this.y);
-                ctx.arcTo(this.x + this.width, this.y, this.x + this.width, this.y + CORNER_RADIUS, CORNER_RADIUS);
-                ctx.lineTo(this.x + this.width, this.y + this.height);
-                ctx.lineTo(this.x, this.y + this.height);
-                ctx.lineTo(this.x, this.y + CORNER_RADIUS);
-                ctx.arcTo(this.x, this.y, this.x + CORNER_RADIUS, this.y, CORNER_RADIUS);
-            } else {
-                ctx.moveTo(this.x, this.y);
-                ctx.lineTo(this.x + this.width, this.y);
-                ctx.lineTo(this.x + this.width, this.y + this.height - CORNER_RADIUS);
-                ctx.arcTo(this.x + this.width, this.y + this.height, this.x + this.width - CORNER_RADIUS, this.y + this.height, CORNER_RADIUS);
-                ctx.lineTo(this.x + CORNER_RADIUS, this.y + this.height);
-                ctx.arcTo(this.x, this.y + this.height, this.x, this.y + this.height - CORNER_RADIUS, CORNER_RADIUS);
-                ctx.lineTo(this.x, this.y);
-            }
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
-
-            const parkurSettings = parkurs[currentParkur];
-            ctx.fillStyle = parkurSettings.detailObstacle;
-            
-            if (this.isTop) {
-                const spikeCount = Math.floor(this.width / SPIKE_WIDTH);
-                for (let i = 0; i < spikeCount; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo(this.x + (i * this.width / spikeCount), this.y + this.height);
-                    ctx.lineTo(this.x + (i * this.width / spikeCount) + SPIKE_WIDTH / 2, this.y + this.height + SPIKE_HEIGHT);
-                    ctx.lineTo(this.x + (i * this.width / spikeCount) + SPIKE_WIDTH, this.y + this.height);
-                    ctx.closePath();
-                    ctx.fill();
-                }
-            } else {
-                const spikeCount = Math.floor(this.width / SPIKE_WIDTH);
-                for (let i = 0; i < spikeCount; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo(this.x + (i * this.width / spikeCount), this.y);
-                    ctx.lineTo(this.x + (i * this.width / spikeCount) + SPIKE_WIDTH / 2, this.y - SPIKE_HEIGHT);
-                    ctx.lineTo(this.x + (i * this.width / spikeCount) + SPIKE_WIDTH, this.y);
-                    ctx.closePath();
-                    ctx.fill();
-                }
-            }
-        }
-
-        update(speed) {
-            this.x -= speed;
-        }
-    }
-
-    function startGame(mode, parkur) {
-        currentMode = 'single';
-        currentParkur = parkur;
-
-        const parkurSettings = parkurs[parkur];
-        groundColor = parkurSettings.ground;
-        obstacleColor = parkurSettings.obstacle;
-
-        gameSpeed = difficulties[currentDifficulty].speed;
-
-        const savedData = loadGameData();
-        player1 = new Player(
-            PLAYER_INITIAL_X,
-            savedData.playerColor || storeItems[0].color,
-            { jump: 'Space' },
-            savedData.gold,
-            savedData.purchasedColors
-        );
-
-        obstacles = [];
-        clouds = [];
-        goldCoins = [];
-        frameCount = 0;
-        gameRunning = true;
-        gamePaused = false;
-        gameStartTime = Date.now();
-
-        for (let i = 0; i < 5; i++) {
-            clouds.push(new Cloud());
-        }
-
-        showMenu(null);
-        updateScoreDisplays();
-        updateGoldDisplay();
-        updatePlayerInfoDisplay();
-
-        playGameMusic();
-
-        gameLoop();
-    }
-
-    function gameLoop() {
-        if (!gameRunning || gamePaused) return;
-
-        ctx.clearRect(0, 0, W, H);
-
-        const gradient = ctx.createLinearGradient(0, 0, 0, H);
-        const bgColorsMatch = parkurs[currentParkur].bg.match(/#[0-9a-fA-F]{6}/g);
-        if (bgColorsMatch && bgColorsMatch.length >= 2) {
-                gradient.addColorStop(0, bgColorsMatch[0]);
-                gradient.addColorStop(1, bgColorsMatch[1]);
-        } else {
-            gradient.addColorStop(0, '#87ceeb');
-            gradient.addColorStop(1, '#e0f7fa');
-        }
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, W, H);
-
-        clouds.forEach(cloud => {
-            cloud.update();
-            cloud.draw();
-        });
-        
-        ctx.shadowColor = 'rgba(0,0,0,0.3)';
-        ctx.shadowBlur = IS_IOS ? 0 : 15;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = -10;
-
-        const groundGradient = ctx.createLinearGradient(0, H - GROUND_HEIGHT, 0, H);
-        groundGradient.addColorStop(0, groundColor);
-        groundGradient.addColorStop(1, '#555');
-        ctx.fillStyle = groundGradient;
-        ctx.fillRect(0, H - GROUND_HEIGHT, W, GROUND_HEIGHT);
-
-        ctx.shadowOffsetY = 10;
-        const ceilingGradient = ctx.createLinearGradient(0, 0, 0, CEILING_HEIGHT);
-        ceilingGradient.addColorStop(0, '#555');
-        ceilingGradient.addColorStop(1, groundColor);
-        ctx.fillStyle = ceilingGradient;
-        ctx.fillRect(0, 0, W, CEILING_HEIGHT);
-
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
-
-        const parkurSettings = parkurs[currentParkur];
-        ctx.fillStyle = parkurSettings.detailGround;
-
-        for (let x = 0; x < W; x += 60) {
-            ctx.beginPath();
-            ctx.arc(x, H - GROUND_HEIGHT, 10, 0, Math.PI, true);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(x, CEILING_HEIGHT, 10, Math.PI, 0, true);
-            ctx.fill();
-        }
-
-        player1.update();
-        player1.draw();
-
-        if (frameCount % Math.floor(difficulties[currentDifficulty].obstacleGap / (gameSpeed / 3)) === 0) {
-            const maxHeight = H / 3;
-
-            const bottomHeight = MIN_OBSTACLE_HEIGHT + Math.random() * (maxHeight - MIN_OBSTACLE_HEIGHT);
-            obstacles.push(new Obstacle(W, OBSTACLE_WIDTH, bottomHeight, obstacleColor));
-
-            if (Math.random() < 0.6) {
-                const topHeight = MIN_OBSTACLE_HEIGHT + Math.random() * (maxHeight - MIN_OBSTACLE_HEIGHT);
-                const verticalGapForPlayer = PLAYER_HEIGHT * 2.5;
-
-                const topObstacleBottomY = CEILING_HEIGHT + topHeight;
-                const bottomObstacleTopY = H - GROUND_HEIGHT - bottomHeight;
-
-                if ((bottomObstacleTopY - topObstacleBottomY) > verticalGapForPlayer) {
-                    obstacles.push(new Obstacle(W + (OBSTACLE_WIDTH * 2) + Math.random() * 100, OBSTACLE_WIDTH, topHeight, obstacleColor, true));
-                }
-            }
-        }
-
-        if (frameCount % Math.floor(GOLD_SPAWN_FREQUENCY / (gameSpeed/2)) === 0 && Math.random() < GOLD_SPAWN_CHANCE) {
-            const goldY = CEILING_HEIGHT + Math.random() * (H - GROUND_HEIGHT - CEILING_HEIGHT - GOLD_SIZE);
-            goldCoins.push(new Gold(W, goldY));
-        }
-
-        for (let i = obstacles.length - 1; i >= 0; i--) {
-            obstacles[i].update(gameSpeed);
-            obstacles[i].draw();
-
-            if (isColliding(player1, obstacles[i])) {
-                player1.alive = false;
-                playHitSound();
-            }
-
-            if (!obstacles[i].passed && obstacles[i].x + obstacles[i].width < player1.x) {
-                obstacles[i].passed = true;
-                player1.addScore(SCORE_PER_OBSTACLE);
-            }
-
-            if (obstacles[i].x + obstacles[i].width < 0) {
-                obstacles.splice(i, 1);
-            }
-        }
-
-        for (let i = goldCoins.length - 1; i >= 0; i--) {
-            goldCoins[i].update(gameSpeed);
-            goldCoins[i].draw();
-
-            if (isColliding(player1, goldCoins[i]) && !goldCoins[i].collected) {
-                goldCoins[i].collected = true;
-                player1.addGold(goldCoins[i].value);
-                playCoinSound();
-                goldCoins.splice(i, 1);
-            } else if (goldCoins[i].x + goldCoins[i].width < 0) {
-                goldCoins.splice(i, 1);
-            }
-        }
-
-        if (!player1.alive) {
-            gameOver();
-            return;
-        }
-
-        frameCount++;
-        requestAnimationFrame(gameLoop);
-    }
-
-    function isColliding(obj1, obj2) {
-        return obj1.x < obj2.x + obj2.width &&
-               obj1.x + obj1.width > obj2.x &&
-               obj1.y < obj2.y + obj2.height &&
-               obj1.y + obj1.height > obj2.y;
-    }
-
-    const scoreDisplay = document.getElementById('scoreDisplay');
-    const goldDisplay = document.getElementById('goldDisplay');
-    const playerInfoDisplay = document.getElementById('playerInfoDisplay');
-    const pauseButton = document.getElementById('pauseButton');
-
-    function updateScoreDisplays() {
-        scoreDisplay.textContent = `${translations[currentLanguage].score} ${player1.score}`;
-    }
-
-    function updateGoldDisplay() {
-        goldDisplay.textContent = player1.gold;
-        document.getElementById('storeGoldDisplay').textContent = `${translations[currentLanguage].gold} ${player1.gold}`;
-    }
-
-    function updatePlayerInfoDisplay() {
-        const playerColorItem = storeItems.find(item => item.color === player1.color);
-        const playerColorName = playerColorItem ? translations[currentLanguage][playerColorItem.langKey] : 'Unknown Bird';
-        playerInfoDisplay.textContent = `${translations[currentLanguage].bird} ${playerColorName}`;
-        playerInfoDisplay.style.display = 'block';
-    }
-
-    function showMenu(menuId) {
-        document.querySelectorAll('.menu').forEach(menu => {
-            menu.classList.remove('active');
-        });
-        if (menuId) {
-            document.getElementById(menuId).classList.add('active');
-            if (menuId === 'mainMenu') {
-                playMainMenuMusic();
-            }
-            pauseButton.style.display = 'none';
-        } else {
-            pauseButton.style.display = 'block';
-        }
-    }
-
-    function showStore() {
-        showMenu('storeMenu');
-        renderStoreItems();
-    }
-
-    function renderStoreItems() {
-        const container = document.getElementById('storeItemsContainer');
-        container.innerHTML = '';
-        const savedData = loadGameData();
-
-        storeItems.forEach(item => {
-            const itemDiv = document.createElement('div');
-            itemDiv.classList.add('store-item');
-            itemDiv.dataset.color = item.color;
-            const itemName = translations[currentLanguage][item.langKey];
-
-            if (item.color === savedData.playerColor) {
-                itemDiv.classList.add('selected-color');
-            }
-            if (savedData.purchasedColors.includes(item.color) || item.default) {
-                itemDiv.classList.add('purchased');
-            }
-
-            const itemCanvas = document.createElement('canvas');
-            itemCanvas.classList.add('store-item-canvas');
-            itemCanvas.width = 60;
-            itemCanvas.height = 60;
-            const itemCtx = itemCanvas.getContext('2d');
-
-            const tempPlayer = new Player(30, item.color, {});
-            tempPlayer.draw(itemCtx, 5, 5, 1);
-
-            itemDiv.appendChild(itemCanvas);
-
-            const nameP = document.createElement('p');
-            nameP.textContent = itemName;
-            itemDiv.appendChild(nameP);
-
-            const priceP = document.createElement('p');
-            priceP.classList.add('store-item-price');
-            const priceSpan = document.createElement('span');
-            priceSpan.textContent = item.price;
-            priceP.appendChild(priceSpan);
-            itemDiv.appendChild(priceP);
-
-            itemDiv.onclick = () => selectStoreItem(item.color, item.price, itemName);
-            container.appendChild(itemDiv);
-        });
-    }
-
-    function selectStoreItem(color, price, itemName) {
-        const storeMessage = document.getElementById('storeMessage');
-        const savedData = loadGameData();
-
-        if (savedData.purchasedColors.includes(color) || price === 0) {
-            player1.changeColor(color);
-            renderStoreItems();
-            storeMessage.textContent = `${itemName} ${translations[currentLanguage].selected}`;
-        } else if (player1.gold >= price) {
-            player1.addGold(-price);
-            player1.purchasedColors.push(color);
-            saveGameData();
-            player1.changeColor(color);
-            renderStoreItems();
-            storeMessage.textContent = `${itemName} ${translations[currentLanguage].purchased}`;
-        } else {
-            const neededGold = price - player1.gold;
-            storeMessage.textContent = translations[currentLanguage].notEnoughGold.replace('%s', neededGold);
-        }
-    }
-
-    
-const GAME_DATA_KEY = 'birdPartyGameData';
-
-function saveGameData(data) {
-    try {
-        const dataToSave = data || (player1 ? {
-            gold: player1.gold,
-            playerColor: player1.color,
-            purchasedColors: player1.purchasedColors
-        } : { gold: 0, playerColor: storeItems[0].color, purchasedColors: [storeItems[0].color] });
-        localStorage.setItem(GAME_DATA_KEY, JSON.stringify(dataToSave));
-        console.log('Game data saved to localStorage:', dataToSave);
-    } catch (e) {
-        console.error('Error saving game data to localStorage', e);
-    }
-}
-
-function loadGameData() {
-    try {
-        // Try primary key first, then an older key for backwards compatibility
-        let raw = localStorage.getItem(GAME_DATA_KEY);
-        if (!raw) {
-            raw = localStorage.getItem('birdGameData'); // old key (if any)
-            if (raw) {
-                // migrate to new key
-                try {
-                    localStorage.setItem(GAME_DATA_KEY, raw);
-                    localStorage.removeItem('birdGameData');
-                    console.log('Migrated old game data key birdGameData ->', GAME_DATA_KEY);
-                } catch (e) { console.warn('Migration to new key failed', e); }
-            }
-        }
-        if (raw) {
-            const parsedData = JSON.parse(raw);
-            console.log('Game data loaded from localStorage:', parsedData);
-            // ensure required fields exist
-            parsedData.gold = parsedData.gold || 0;
-            parsedData.playerColor = parsedData.playerColor || storeItems[0].color;
-            parsedData.purchasedColors = parsedData.purchasedColors || [storeItems[0].color];
-            return parsedData;
-        }
-    } catch (e) {
-        console.error('Error loading game data from localStorage', e);
-    }
-
-    console.log('No game data found, initializing default values.');
-    const defaultData = {
-        gold: 0,
-        playerColor: storeItems[0].color,
-        purchasedColors: [storeItems[0].color]
-    };
-    try { saveGameData(defaultData); } catch(e) {}
-    return defaultData;
-}
-
-
-    // Kayıt sıfırlama: mevcut kayıt anahtarlarını temizle ve varsayılan kayıt oluştur.
-    try {
-        localStorage.removeItem(GAME_DATA_KEY);
-        localStorage.removeItem('birdGameData');
-    } catch (e) {
-        console.warn('Kayıt temizlenemedi:', e);
-    }
-
-    let initialData;
-    try {
-        initialData = loadGameData();
-        if (!initialData.purchasedColors) {
-            initialData.purchasedColors = [storeItems[0].color];
-            saveGameData(initialData);
-        }
-    } catch (e) {
-        console.error("Failed to load initial data, starting with defaults.");
-        initialData = {
-            gold: 0,
-            playerColor: storeItems[0].color,
-            purchasedColors: [storeItems[0].color]
+    <script>
+        // --- APPLICATION STATE ---
+        let appState = {
+            projects: [],
+            currentProjectId: null,
+            activePageIdx: 0,
+            activeTool: 'select', // select, text, rect, circle, arrow, line, brush, eraser
+            zoom: 1,
+            isDarkMode: false,
+            // Drawing & Interaction state
+            isDrawing: false,
+            isDragging: false,
+            isResizing: false,
+            selectedObjectIdx: null,
+            dragStartX: 0,
+            dragStartY: 0,
+            // Tool settings
+            penColor: '#1e293b',
+            penSize: 4,
+            eraserSize: 20
         };
-        saveGameData(initialData);
-    }
 
-    player1 = new Player(
-        PLAYER_INITIAL_X,
-        initialData.playerColor,
-        { jump: 'Space' },
-        initialData.gold,
-        initialData.purchasedColors
-    );
-    updateGoldDisplay();
-    updatePlayerInfoDisplay();
-
-    function togglePause() {
-        if (!gameRunning) return;
-
-        gamePaused = !gamePaused;
-        if (gamePaused) {
-            showMenu('pauseMenu');
-            stopAllMusic();
-            pauseButton.style.display = 'none';
-        } else {
-            showMenu(null);
-            playGameMusic();
-            gameLoop();
+        function getCurrentProject() {
+            return appState.projects.find(p => p.id === appState.currentProjectId);
         }
-    }
 
-    function resumeGame() {
-        togglePause();
-    }
-
-    function gameOver() {
-        gameRunning = false;
-        
-        playGameOverMusic();
-
-        document.getElementById('finalScoreText').textContent = `${translations[currentLanguage].yourScore} ${player1.score}`;
-        saveGameData();
-        showMenu('gameOverMenu');
-        document.getElementById('playerInfoDisplay').style.display = 'none';
-        pauseButton.style.display = 'none';
-    }
-
-    function restartGame() {
-        startGame(currentMode, currentParkur);
-    }
-
-    function returnToMainMenu() {
-        gameRunning = false;
-        playMainMenuMusic();
-        showMenu('mainMenu');
-        document.getElementById('playerInfoDisplay').style.display = 'none';
-        pauseButton.style.display = 'none';
-    }
-
-    window.addEventListener('resize', () => {
-        W = window.innerWidth;
-        H = window.innerHeight;
-        canvas.width = W;
-        canvas.height = H;
-        if (gameRunning && !gamePaused) {
-            player1.y = H / 2;
+        function getCurrentPage() {
+            let p = getCurrentProject();
+            if (!p || !p.pages || p.pages.length === 0) return null;
+            return p.pages[appState.activePageIdx];
         }
-    });
 
-    document.addEventListener('keydown', (e) => {
-        if (e.code === 'Space' && gameRunning && !gamePaused) {
-            player1.jump();
-        } else if (e.code === 'Escape' && gameRunning) {
-            togglePause();
-        }
-    });
+        // --- INITIALIZATION ---
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            initDarkMode();
+            renderProjectsList();
+            lucide.createIcons();
 
-    canvas.addEventListener('click', (e) => {
-        if (gameRunning && !gamePaused) {
-            if (e.target.tagName === 'CANVAS') {
-                player1.jump();
-            }
-        }
-    });
+            window.addEventListener('keydown', handleKeyDown);
 
-    document.addEventListener('DOMContentLoaded', () => {
-        setDifficulty('normal');
-        const savedLang = localStorage.getItem('language') || 'en';
-        setLanguage(savedLang);
-    });
-
-    function setDifficulty(difficulty) {
-        currentDifficulty = difficulty;
-        document.querySelectorAll('.difficulty-btn').forEach(btn => {
-            btn.classList.remove('selected');
-            if (btn.dataset.difficulty === difficulty) {
-                btn.classList.add('selected');
-            }
+            const canvas = document.getElementById('main-canvas');
+            canvas.addEventListener('mousedown', handleCanvasMouseDown);
+            canvas.addEventListener('mousemove', handleCanvasMouseMove);
+            canvas.addEventListener('mouseup', handleCanvasMouseUp);
+            canvas.addEventListener('touchstart', handleCanvasTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', handleCanvasTouchMove, { passive: false });
+            canvas.addEventListener('touchend', handleCanvasTouchEnd);
         });
-    }
 
-    // Yeni: buton sesi ekle
-    let buttonClickSound = new Audio('wood_plank_flicks.ogg');
-
-    function playButtonSound() {
-        if (buttonClickSound) {
-            buttonClickSound.currentTime = 0;
-            buttonClickSound.volume = globalVolume * 0.7;
-            buttonClickSound.play().catch(e => console.error("Buton sesi çalınamadı:", e));
+        // --- LOCAL STORAGE ---
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('pdfpoint_projects', JSON.stringify(appState.projects));
+                let statusEl = document.getElementById('autosave-status');
+                if (statusEl) {
+                    statusEl.textContent = '(Kaydedildi)';
+                    setTimeout(() => { statusEl.textContent = ''; }, 2000);
+                }
+            } catch (e) {
+                console.error('Save failed:', e);
+            }
         }
-    }
 
-    // Tüm butonlara tıklanınca ses çal
-    window.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                playButtonSound();
+        function loadFromLocalStorage() {
+            try {
+                let data = localStorage.getItem('pdfpoint_projects');
+                if (data) {
+                    appState.projects = JSON.parse(data);
+                } else {
+                    appState.projects = [{
+                        id: 'proj_' + Date.now(),
+                        name: 'Örnek Sunum Projesi',
+                        createdAt: Date.now(),
+                        pages: [
+                            {
+                                objects: [
+                                    { type: 'text', x: 150, y: 200, width: 500, height: 80, text: 'PDF engineer\'e Hoş Geldiniz!', fontSize: 36, fontFamily: 'Inter', color: '#4f46e5', bold: true, italic: false, underline: false, rotation: 0 },
+                                    { type: 'text', x: 150, y: 300, width: 500, height: 50, text: 'Modern PDF ve Sunum Tasarım Aracı', fontSize: 20, fontFamily: 'Inter', color: '#64748b', bold: false, italic: false, underline: false, rotation: 0 },
+                                    { type: 'rect', x: 150, y: 400, width: 200, height: 120, fillColor: '#e0e7ff', color: '#6366f1', borderWidth: 2, rotation: 0 }
+                                ],
+                                drawings: []
+                            },
+                            { objects: [], drawings: [] }
+                        ]
+                    }];
+                    saveToLocalStorage();
+                }
+            } catch (e) {
+                appState.projects = [];
+            }
+        }
+
+        // --- TOASTS ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            let bgClass = type === 'success' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-rose-600 text-white';
+            toast.className = `pointer-events-auto px-3.5 py-2.5 rounded-xl shadow-lg text-xs font-medium flex items-center gap-2 transition-all duration-300 translate-y-2 opacity-0 ${bgClass}`;
+            toast.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="w-4 h-4"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 10);
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- THEME ---
+        function initDarkMode() {
+            let savedTheme = localStorage.getItem('pdfpoint_theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                appState.isDarkMode = true;
+                document.documentElement.classList.add('dark');
+            } else {
+                appState.isDarkMode = false;
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function toggleDarkMode() {
+            appState.isDarkMode = !appState.isDarkMode;
+            if (appState.isDarkMode) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('pdfpoint_theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('pdfpoint_theme', 'light');
+            }
+        }
+
+        // --- DASHBOARD ---
+        function renderProjectsList() {
+            const grid = document.getElementById('projects-grid');
+            const emptyState = document.getElementById('projects-empty');
+            const countBadge = document.getElementById('project-count-badge');
+
+            countBadge.textContent = `${appState.projects.length} Proje`;
+
+            if (appState.projects.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                return;
+            }
+
+            emptyState.classList.remove('flex');
+            emptyState.classList.add('hidden');
+
+            grid.innerHTML = appState.projects.map(proj => {
+                let pageCount = proj.pages ? proj.pages.length : 0;
+                let dateStr = new Date(proj.createdAt || Date.now()).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+                return `
+                    <div class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-primary-500 rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between gap-5 cursor-pointer" onclick="openProject('${proj.id}')">
+                        <div class="flex flex-col gap-1.5">
+                            <div class="flex items-center justify-between">
+                                <div class="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-base">
+                                    ${proj.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition" onclick="event.stopPropagation()">
+                                    <button onclick="renameProjectPrompt('${proj.id}')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition" title="Yeniden Adlandır"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+                                    <button onclick="deleteProject('${proj.id}')" class="p-1.5 rounded-lg hover:bg-rose-50 text-rose-500 transition" title="Sil"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                                </div>
+                            </div>
+                            <h4 class="font-bold text-slate-800 dark:text-slate-100 text-base mt-1 truncate">${escapeHtml(proj.name)}</h4>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">${pageCount} Sayfa • ${dateStr}</p>
+                        </div>
+                        <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 text-xs font-semibold text-primary-600 dark:text-primary-400">
+                            <span>Projeyi Aç</span>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition"></i>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function openNewProjectModal() {
+            document.getElementById('modal-new-project').classList.remove('hidden');
+            document.getElementById('modal-new-project').classList.add('flex');
+        }
+
+        function closeNewProjectModal() {
+            document.getElementById('modal-new-project').classList.remove('flex');
+            document.getElementById('modal-new-project').classList.add('hidden');
+        }
+
+        function createProjectSubmit() {
+            let nameInput = document.getElementById('input-new-project-name').value.trim() || 'Yeni Proje';
+            let pageCount = parseInt(document.getElementById('input-new-project-pages').value) || 3;
+
+            let pages = [];
+            for (let i = 0; i < pageCount; i++) {
+                pages.push({ objects: [], drawings: [] });
+            }
+
+            let newProj = {
+                id: 'proj_' + Date.now(),
+                name: nameInput,
+                createdAt: Date.now(),
+                pages: pages
+            };
+
+            appState.projects.unshift(newProj);
+            saveToLocalStorage();
+            closeNewProjectModal();
+            openProject(newProj.id);
+            showToast('Proje başarıyla oluşturuldu!');
+        }
+
+        function deleteProject(id) {
+            if (confirm('Bu projeyi silmek istediğinize emin misiniz?')) {
+                appState.projects = appState.projects.filter(p => p.id !== id);
+                saveToLocalStorage();
+                renderProjectsList();
+                showToast('Proje silindi.', 'error');
+            }
+        }
+
+        function renameProjectPrompt(id) {
+            let proj = appState.projects.find(p => p.id === id);
+            if (!proj) return;
+            let newName = prompt('Yeni proje adı:', proj.name);
+            if (newName && newName.trim()) {
+                proj.name = newName.trim();
+                saveToLocalStorage();
+                renderProjectsList();
+                showToast('Proje yeniden adlandırıldı.');
+            }
+        }
+
+        // --- EDITOR NAVIGATION ---
+        function openProject(id) {
+            appState.currentProjectId = id;
+            appState.activePageIdx = 0;
+            appState.selectedObjectIdx = null;
+
+            let proj = getCurrentProject();
+            if (!proj) return;
+
+            document.getElementById('editor-project-title').textContent = proj.name;
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-editor').classList.remove('hidden');
+
+            renderThumbnails();
+            redrawCanvas();
+            updateInspector();
+            lucide.createIcons();
+        }
+
+        function backToHome() {
+            appState.currentProjectId = null;
+            document.getElementById('view-editor').classList.add('hidden');
+            document.getElementById('view-home').classList.remove('hidden');
+            renderProjectsList();
+        }
+
+        function renameCurrentProjectPrompt() {
+            let proj = getCurrentProject();
+            if (!proj) return;
+            let newName = prompt('Proje adı:', proj.name);
+            if (newName && newName.trim()) {
+                proj.name = newName.trim();
+                document.getElementById('editor-project-title').textContent = proj.name;
+                saveToLocalStorage();
+                showToast('Proje adı güncellendi.');
+            }
+        }
+
+        function saveCurrentProjectManual() {
+            saveToLocalStorage();
+            showToast('Proje başarıyla kaydedildi.');
+        }
+
+        // --- THUMBNAILS ---
+        function renderThumbnails() {
+            let proj = getCurrentProject();
+            if (!proj) return;
+
+            document.getElementById('page-count-display').textContent = proj.pages.length;
+            let listEl = document.getElementById('pages-thumbnail-list');
+
+            listEl.innerHTML = proj.pages.map((page, idx) => {
+                let isActive = idx === appState.activePageIdx;
+                let activeClass = isActive ? 'border-primary-500 ring-2 ring-primary-500/20 bg-primary-50/50 dark:bg-primary-950/20' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300';
+                return `
+                    <div onclick="switchPage(${idx})" class="group relative bg-white dark:bg-slate-900 border ${activeClass} rounded-xl p-2.5 cursor-pointer transition flex items-center gap-2.5 shadow-sm shrink-0 md:shrink">
+                        <div class="w-7 h-9 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-[11px] text-slate-500 shrink-0">
+                            ${idx + 1}
+                        </div>
+                        <div class="hidden md:block flex-1 truncate">
+                            <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 block">Sayfa ${idx + 1}</span>
+                            <span class="text-[9px] text-slate-400">${page.objects.length} nesne</span>
+                        </div>
+                        <button onclick="event.stopPropagation(); deletePage(${idx})" class="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-600 transition md:block hidden" title="Sil">
+                            <i data-lucide="trash-2" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function switchPage(idx) {
+            appState.activePageIdx = idx;
+            appState.selectedObjectIdx = null;
+            renderThumbnails();
+            redrawCanvas();
+            updateInspector();
+        }
+
+        function addNewPage() {
+            let proj = getCurrentProject();
+            if (!proj) return;
+            proj.pages.push({ objects: [], drawings: [] });
+            appState.activePageIdx = proj.pages.length - 1;
+            saveToLocalStorage();
+            renderThumbnails();
+            redrawCanvas();
+            updateInspector();
+            showToast('Yeni sayfa eklendi.');
+        }
+
+        function duplicateActivePage() {
+            let proj = getCurrentProject();
+            if (!proj) return;
+            let current = proj.pages[appState.activePageIdx];
+            let clone = JSON.parse(JSON.stringify(current));
+            proj.pages.splice(appState.activePageIdx + 1, 0, clone);
+            appState.activePageIdx++;
+            saveToLocalStorage();
+            renderThumbnails();
+            redrawCanvas();
+            updateInspector();
+            showToast('Sayfa kopyalandı.');
+        }
+
+        function deleteActivePage() {
+            let proj = getCurrentProject();
+            if (!proj) return;
+            if (proj.pages.length <= 1) {
+                showToast('Projede en az bir sayfa olmalıdır!', 'error');
+                return;
+            }
+            if (confirm('Bu sayfayı silmek istediğinize emin misiniz?')) {
+                proj.pages.splice(appState.activePageIdx, 1);
+                if (appState.activePageIdx >= proj.pages.length) {
+                    appState.activePageIdx = proj.pages.length - 1;
+                }
+                saveToLocalStorage();
+                renderThumbnails();
+                redrawCanvas();
+                updateInspector();
+                showToast('Sayfa silindi.', 'error');
+            }
+        }
+
+        function deletePage(idx) {
+            let proj = getCurrentProject();
+            if (!proj) return;
+            if (proj.pages.length <= 1) {
+                showToast('Projede en az bir sayfa olmalıdır!', 'error');
+                return;
+            }
+            if (confirm(`Sayfa ${idx + 1} silinsin mi?`)) {
+                proj.pages.splice(idx, 1);
+                if (appState.activePageIdx >= proj.pages.length) {
+                    appState.activePageIdx = proj.pages.length - 1;
+                }
+                saveToLocalStorage();
+                renderThumbnails();
+                redrawCanvas();
+                updateInspector();
+                showToast('Sayfa silindi.', 'error');
+            }
+        }
+
+        // --- TOOL SETTINGS POPUP ---
+        let configuringTool = 'brush';
+        function openToolSettings(tool) {
+            configuringTool = tool;
+            document.getElementById('tool-settings-title').textContent = tool === 'brush' ? 'Kalem Ayarları' : 'Silgi Ayarları';
+            let colorWrapper = document.getElementById('setting-color-wrapper');
+            if (tool === 'eraser') {
+                colorWrapper.classList.add('hidden');
+                document.getElementById('tool-setting-size').value = appState.eraserSize;
+                document.getElementById('setting-size-val').textContent = appState.eraserSize;
+            } else {
+                colorWrapper.classList.remove('hidden');
+                document.getElementById('tool-setting-color').value = appState.penColor;
+                document.getElementById('tool-setting-size').value = appState.penSize;
+                document.getElementById('setting-size-val').textContent = appState.penSize;
+            }
+            document.getElementById('modal-tool-settings').classList.remove('hidden');
+            document.getElementById('modal-tool-settings').classList.add('flex');
+        }
+
+        function closeToolSettings() {
+            document.getElementById('modal-tool-settings').classList.remove('flex');
+            document.getElementById('modal-tool-settings').classList.add('hidden');
+        }
+
+        function saveToolSettings() {
+            let size = parseInt(document.getElementById('tool-setting-size').value) || 4;
+            if (configuringTool === 'eraser') {
+                appState.eraserSize = size;
+                setTool('eraser');
+            } else {
+                appState.penSize = size;
+                appState.penColor = document.getElementById('tool-setting-color').value;
+                setTool('brush');
+            }
+            closeToolSettings();
+            showToast('Ayarlar güncellendi.');
+        }
+
+        // --- TOOLS ---
+        function setTool(tool) {
+            appState.activeTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-200', 'dark:bg-slate-800');
             });
-        });
-    });
+            let activeBtn = document.getElementById('tool-' + tool);
+            if (activeBtn) activeBtn.classList.add('bg-slate-200', 'dark:bg-slate-800');
 
-
-// --- Yandex Games Reklam SDK Başlangıcı ---
-window.onload = async () => {
-  if (window.YaGames) {
-    YaGames.init().then(ysdk => {
-      window.ysdk = ysdk;
-      console.log("✅ Yandex SDK yüklendi");
-
-      // Test amaçlı tam ekran reklam (Yandex sistemine bildirim yapar)
-      ysdk.adv.showFullscreenAdv({
-        callbacks: {
-          onOpen: () => console.log("Reklam açıldı"),
-          onClose: () => console.log("Reklam kapandı"),
-          onError: (err) => console.error("Reklam hatası:", err)
+            if (tool === 'text') {
+                addTextObject();
+                setTool('select');
+            } else if (tool === 'rect') {
+                addShapeObject('rect');
+                setTool('select');
+            } else if (tool === 'circle') {
+                addShapeObject('circle');
+                setTool('select');
+            } else if (tool === 'arrow') {
+                addShapeObject('arrow');
+                setTool('select');
+            } else if (tool === 'line') {
+                addShapeObject('line');
+                setTool('select');
+            }
         }
-      });
-    });
-  } else {
-    console.warn("⚠️ Yandex SDK bulunamadı. Yandex Games ortamında çalıştırılmalı.");
-  }
-};
-// --- Yandex Games Reklam SDK Sonu ---
 
+        function addTextObject() {
+            let page = getCurrentPage();
+            if (!page) return;
+            let newObj = {
+                type: 'text',
+                x: 200,
+                y: 200,
+                width: 300,
+                height: 50,
+                text: 'Yeni Metin',
+                fontSize: 24,
+                fontFamily: 'Inter',
+                color: '#1e293b',
+                bold: false,
+                italic: false,
+                underline: false,
+                rotation: 0
+            };
+            page.objects.push(newObj);
+            appState.selectedObjectIdx = page.objects.length - 1;
+            saveToLocalStorage();
+            redrawCanvas();
+            updateInspector();
+            showToast('Metin eklendi.');
+        }
 
-// --- Ölüm Sayacı ve Reklam Sistemi ---
-let deathCount = 0; // toplam ölüm sayısı
+        function addShapeObject(shapeType) {
+            let page = getCurrentPage();
+            if (!page) return;
+            let newObj = {
+                type: shapeType,
+                x: 250,
+                y: 250,
+                width: 150,
+                height: 150,
+                color: '#4f46e5',
+                fillColor: '#e0e7ff',
+                borderWidth: 2,
+                rotation: 0
+            };
+            page.objects.push(newObj);
+            appState.selectedObjectIdx = page.objects.length - 1;
+            saveToLocalStorage();
+            redrawCanvas();
+            updateInspector();
+            showToast('Şekil eklendi.');
+        }
 
-// Oyun bitişinde reklam kontrolü
-function gameOver() {
-  player1.alive = false;
-  deathCount++;
+        function handleImageUpload(e) {
+            let file = e.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(event) {
+                let img = new Image();
+                img.onload = function() {
+                    let page = getCurrentPage();
+                    if (!page) return;
+                    let w = 250;
+                    let h = (img.height / img.width) * w;
+                    let newObj = {
+                        type: 'image',
+                        x: 200,
+                        y: 200,
+                        width: w,
+                        height: h,
+                        src: event.target.result,
+                        rotation: 0
+                    };
+                    page.objects.push(newObj);
+                    appState.selectedObjectIdx = page.objects.length - 1;
+                    saveToLocalStorage();
+                    redrawCanvas();
+                    updateInspector();
+                    showToast('Görsel eklendi.');
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+            e.target.value = '';
+        }
 
-  // Her 10. ölümde reklam göster
-  if (deathCount % 10 === 0 && window.ysdk) {
-    ysdk.adv.showFullscreenAdv({
-      callbacks: {
-        onOpen: () => console.log("Reklam açıldı"),
-        onClose: () => console.log("Reklam kapandı"),
-        onError: (err) => console.error("Reklam hatası:", err)
-      }
-    });
-  }
+        // --- CANVAS RENDERING ---
+        function redrawCanvas() {
+            const canvas = document.getElementById('main-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  playGameOverMusic();
-  showMenu("gameOverMenu");
-}
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-</script>
+            let page = getCurrentPage();
+            if (!page) return;
 
+            if (page.drawings) {
+                page.drawings.forEach(path => {
+                    if (!path.points || path.points.length === 0) return;
+                    ctx.beginPath();
+                    ctx.strokeStyle = path.color || '#1e293b';
+                    ctx.lineWidth = path.size || 3;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    if (path.isEraser) {
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = path.size || 20;
+                    }
+                    ctx.moveTo(path.points[0].x, path.points[0].y);
+                    for (let i = 1; i < path.points.length; i++) {
+                        ctx.lineTo(path.points[i].x, path.points[i].y);
+                    }
+                    ctx.stroke();
+                });
+            }
+
+            page.objects.forEach((obj, idx) => {
+                ctx.save();
+                
+                if (obj.rotation) {
+                    let cx = obj.x + obj.width / 2;
+                    let cy = obj.y + obj.height / 2;
+                    ctx.translate(cx, cy);
+                    ctx.rotate(obj.rotation);
+                    ctx.translate(-cx, -cy);
+                }
+
+                if (obj.type === 'text') {
+                    ctx.font = `${obj.italic ? 'italic ' : ''}${obj.bold ? 'bold ' : ''}${obj.fontSize || 24}px ${obj.fontFamily || 'Inter'}`;
+                    ctx.fillStyle = obj.color || '#1e293b';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(obj.text || '', obj.x, obj.y);
+                } else if (obj.type === 'rect') {
+                    if (obj.fillColor) {
+                        ctx.fillStyle = obj.fillColor;
+                        ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    }
+                    if (obj.color && obj.borderWidth > 0) {
+                        ctx.strokeStyle = obj.color;
+                        ctx.lineWidth = obj.borderWidth || 2;
+                        ctx.strokeRect(obj.x, obj.y, obj.width, obj.height);
+                    }
+                } else if (obj.type === 'circle') {
+                    ctx.beginPath();
+                    let rx = obj.width / 2;
+                    let ry = obj.height / 2;
+                    let cx = obj.x + rx;
+                    let cy = obj.y + ry;
+                    ctx.ellipse(cx, cy, Math.abs(rx), Math.abs(ry), 0, 0, Math.PI * 2);
+                    if (obj.fillColor) {
+                        ctx.fillStyle = obj.fillColor;
+                        ctx.fill();
+                    }
+                    if (obj.color) {
+                        ctx.strokeStyle = obj.color;
+                        ctx.lineWidth = obj.borderWidth || 2;
+                        ctx.stroke();
+                    }
+                } else if (obj.type === 'line') {
+                    ctx.beginPath();
+                    ctx.strokeStyle = obj.color || '#4f46e5';
+                    ctx.lineWidth = obj.borderWidth || 3;
+                    ctx.moveTo(obj.x, obj.y);
+                    ctx.lineTo(obj.x + obj.width, obj.y + obj.height);
+                    ctx.stroke();
+                } else if (obj.type === 'arrow') {
+                    let x1 = obj.x, y1 = obj.y, x2 = obj.x + obj.width, y2 = obj.y + obj.height;
+                    ctx.beginPath();
+                    ctx.strokeStyle = obj.color || '#4f46e5';
+                    ctx.lineWidth = obj.borderWidth || 3;
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+
+                    let angle = Math.atan2(y2 - y1, x2 - x1);
+                    let headLen = 15;
+                    ctx.beginPath();
+                    ctx.fillStyle = obj.color || '#4f46e5';
+                    ctx.moveTo(x2, y2);
+                    ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+                    ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+                    ctx.fill();
+                } else if (obj.type === 'image' && obj.imgElement) {
+                    ctx.drawImage(obj.imgElement, obj.x, obj.y, obj.width, obj.height);
+                } else if (obj.type === 'image' && obj.src) {
+                    let img = new Image();
+                    img.onload = () => {
+                        obj.imgElement = img;
+                        redrawCanvas();
+                    };
+                    img.src = obj.src;
+                }
+
+                // Selection box & Resize handle
+                if (idx === appState.selectedObjectIdx) {
+                    ctx.strokeStyle = '#6366f1';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeRect(obj.x - 4, obj.y - 4, obj.width + 8, obj.height + 8);
+                    ctx.setLineDash([]);
+
+                    ctx.fillStyle = '#6366f1';
+                    ctx.fillRect(obj.x + obj.width - 6, obj.y + obj.height - 6, 12, 12);
+                }
+                ctx.restore();
+            });
+        }
+
+        // --- MOUSE & TOUCH INTERACTION WITH RESIZE & DRAG ---
+        function getCanvasCoordinates(e) {
+            const canvas = document.getElementById('main-canvas');
+            const rect = canvas.getBoundingClientRect();
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+            let scaleX = canvas.width / rect.width;
+            let scaleY = canvas.height / rect.height;
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        function handleCanvasMouseDown(e) {
+            let coords = getCanvasCoordinates(e);
+            let page = getCurrentPage();
+            if (!page) return;
+
+            if (appState.activeTool === 'brush' || appState.activeTool === 'eraser') {
+                appState.isDrawing = true;
+                if (!page.drawings) page.drawings = [];
+                page.drawings.push({
+                    color: appState.penColor,
+                    size: appState.activeTool === 'eraser' ? appState.eraserSize : appState.penSize,
+                    isEraser: appState.activeTool === 'eraser',
+                    points: [{ x: coords.x, y: coords.y }]
+                });
+                return;
+            }
+
+            if (appState.selectedObjectIdx !== null) {
+                let obj = page.objects[appState.selectedObjectIdx];
+                let handleX = obj.x + obj.width;
+                let handleY = obj.y + obj.height;
+                if (Math.abs(coords.x - handleX) < 15 && Math.abs(coords.y - handleY) < 15) {
+                    appState.isResizing = true;
+                    appState.dragStartX = coords.x;
+                    appState.dragStartY = coords.y;
+                    return;
+                }
+            }
+
+            let clickedIdx = -1;
+            for (let i = page.objects.length - 1; i >= 0; i--) {
+                let obj = page.objects[i];
+                if (coords.x >= obj.x && coords.x <= obj.x + obj.width && coords.y >= obj.y && coords.y <= obj.y + obj.height) {
+                    clickedIdx = i;
+                    break;
+                }
+            }
+
+            appState.selectedObjectIdx = clickedIdx;
+            if (clickedIdx !== -1) {
+                appState.isDragging = true;
+                appState.dragStartX = coords.x - page.objects[clickedIdx].x;
+                appState.dragStartY = coords.y - page.objects[clickedIdx].y;
+            }
+            redrawCanvas();
+            updateInspector();
+        }
+
+        function handleCanvasMouseMove(e) {
+            let coords = getCanvasCoordinates(e);
+            let page = getCurrentPage();
+            if (!page) return;
+
+            if (appState.isDrawing && page.drawings && page.drawings.length > 0) {
+                let currentPath = page.drawings[page.drawings.length - 1];
+                currentPath.points.push({ x: coords.x, y: coords.y });
+                redrawCanvas();
+                return;
+            }
+
+            if (appState.isResizing && appState.selectedObjectIdx !== null) {
+                let obj = page.objects[appState.selectedObjectIdx];
+                let dw = coords.x - appState.dragStartX;
+                let dh = coords.y - appState.dragStartY;
+                obj.width = Math.max(20, obj.width + dw);
+                obj.height = Math.max(20, obj.height + dh);
+                appState.dragStartX = coords.x;
+                appState.dragStartY = coords.y;
+                redrawCanvas();
+                updateInspectorValuesOnly();
+                return;
+            }
+
+            if (appState.isDragging && appState.selectedObjectIdx !== null) {
+                let obj = page.objects[appState.selectedObjectIdx];
+                obj.x = coords.x - appState.dragStartX;
+                obj.y = coords.y - appState.dragStartY;
+                redrawCanvas();
+                updateInspectorValuesOnly();
+            }
+        }
+
+        function handleCanvasMouseUp(e) {
+            if (appState.isDrawing || appState.isDragging || appState.isResizing) {
+                appState.isDrawing = false;
+                appState.isDragging = false;
+                appState.isResizing = false;
+                saveToLocalStorage();
+            }
+        }
+
+        function handleCanvasTouchStart(e) {
+            e.preventDefault();
+            handleCanvasMouseDown(e);
+        }
+        function handleCanvasTouchMove(e) {
+            e.preventDefault();
+            handleCanvasMouseMove(e);
+        }
+        function handleCanvasTouchEnd(e) {
+            e.preventDefault();
+            handleCanvasMouseUp(e);
+        }
+
+        // --- INSPECTOR PANEL ---
+        function updateInspector() {
+            let page = getCurrentPage();
+            let emptyEl = document.getElementById('inspector-empty');
+            let formEl = document.getElementById('inspector-form');
+            let typeBadge = document.getElementById('selected-object-type');
+
+            if (appState.selectedObjectIdx === null || !page || !page.objects[appState.selectedObjectIdx]) {
+                emptyEl.classList.remove('hidden');
+                formEl.classList.add('hidden');
+                typeBadge.textContent = 'Seçim Yok';
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            formEl.classList.remove('hidden');
+
+            let obj = page.objects[appState.selectedObjectIdx];
+            typeBadge.textContent = obj.type.toUpperCase();
+
+            document.getElementById('prop-x').value = Math.round(obj.x);
+            document.getElementById('prop-y').value = Math.round(obj.y);
+            document.getElementById('prop-w').value = Math.round(obj.width);
+            document.getElementById('prop-h').value = Math.round(obj.height);
+
+            let textSection = document.getElementById('prop-section-text');
+            if (obj.type === 'text') {
+                textSection.classList.remove('hidden');
+                document.getElementById('prop-text-content').value = obj.text || '';
+                document.getElementById('prop-font-size').value = obj.fontSize || 24;
+                document.getElementById('prop-font-family').value = obj.fontFamily || 'Inter';
+            } else {
+                textSection.classList.add('hidden');
+            }
+
+            if (document.getElementById('prop-color')) document.getElementById('prop-color').value = obj.color || '#4f46e5';
+            if (document.getElementById('prop-fill')) document.getElementById('prop-fill').value = obj.fillColor || '#e0e7ff';
+        }
+
+        function updateInspectorValuesOnly() {
+            let page = getCurrentPage();
+            if (appState.selectedObjectIdx === null || !page) return;
+            let obj = page.objects[appState.selectedObjectIdx];
+            if (document.getElementById('prop-x')) document.getElementById('prop-x').value = Math.round(obj.x);
+            if (document.getElementById('prop-y')) document.getElementById('prop-y').value = Math.round(obj.y);
+            if (document.getElementById('prop-w')) document.getElementById('prop-w').value = Math.round(obj.width);
+            if (document.getElementById('prop-h')) document.getElementById('prop-h').value = Math.round(obj.height);
+        }
+
+        function updateSelectedObjectProp(propName, val) {
+            let page = getCurrentPage();
+            if (appState.selectedObjectIdx === null || !page) return;
+            let obj = page.objects[appState.selectedObjectIdx];
+
+            if (['x', 'y', 'width', 'height', 'fontSize'].includes(propName)) {
+                obj[propName] = Math.max(10, parseFloat(val) || 0);
+            } else {
+                obj[propName] = val;
+            }
+
+            saveToLocalStorage();
+            redrawCanvas();
+        }
+
+        function toggleTextFormat(format) {
+            let page = getCurrentPage();
+            if (appState.selectedObjectIdx === null || !page) return;
+            let obj = page.objects[appState.selectedObjectIdx];
+            if (obj.type !== 'text') return;
+
+            if (format === 'bold') obj.bold = !obj.bold;
+            if (format === 'italic') obj.italic = !obj.italic;
+            if (format === 'underline') obj.underline = !obj.underline;
+
+            saveToLocalStorage();
+            redrawCanvas();
+        }
+
+        function deleteSelectedObject() {
+            let page = getCurrentPage();
+            if (appState.selectedObjectIdx === null || !page) return;
+            page.objects.splice(appState.selectedObjectIdx, 1);
+            appState.selectedObjectIdx = null;
+            saveToLocalStorage();
+            redrawCanvas();
+            updateInspector();
+            showToast('Nesne silindi.');
+        }
+
+        function duplicateSelectedObject() {
+            let page = getCurrentPage();
+            if (appState.selectedObjectIdx === null || !page) return;
+            let obj = page.objects[appState.selectedObjectIdx];
+            let clone = JSON.parse(JSON.stringify(obj));
+            clone.x += 20;
+            clone.y += 20;
+            page.objects.push(clone);
+            appState.selectedObjectIdx = page.objects.length - 1;
+            saveToLocalStorage();
+            redrawCanvas();
+            updateInspector();
+            showToast('Nesne kopyalandı.');
+        }
+
+        function bringForward() {
+            let page = getCurrentPage();
+            if (appState.selectedObjectIdx === null || !page) return;
+            let idx = appState.selectedObjectIdx;
+            if (idx < page.objects.length - 1) {
+                let temp = page.objects[idx];
+                page.objects[idx] = page.objects[idx + 1];
+                page.objects[idx + 1] = temp;
+                appState.selectedObjectIdx++;
+                saveToLocalStorage();
+                redrawCanvas();
+            }
+        }
+
+        function sendBackward() {
+            let page = getCurrentPage();
+            if (appState.selectedObjectIdx === null || !page) return;
+            let idx = appState.selectedObjectIdx;
+            if (idx > 0) {
+                let temp = page.objects[idx];
+                page.objects[idx] = page.objects[idx - 1];
+                page.objects[idx - 1] = temp;
+                appState.selectedObjectIdx--;
+                saveToLocalStorage();
+                redrawCanvas();
+            }
+        }
+
+        // --- ZOOM ---
+        function zoomIn() {
+            appState.zoom = Math.min(appState.zoom + 0.15, 2.5);
+            applyZoom();
+        }
+
+        function zoomOut() {
+            appState.zoom = Math.max(appState.zoom - 0.15, 0.4);
+            applyZoom();
+        }
+
+        function zoomFit() {
+            appState.zoom = 1;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            let wrapper = document.getElementById('canvas-wrapper');
+            wrapper.style.transform = `scale(${appState.zoom})`;
+            document.getElementById('zoom-level-text').textContent = Math.round(appState.zoom * 100) + '%';
+        }
+
+        function undoAction() { showToast('Geri alındı.'); }
+        function redoAction() { showToast('Yinele uygulandı.'); }
+
+        function handleKeyDown(e) {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                    deleteSelectedObject();
+                }
+            }
+            
+            if (e.key === 'r' || e.key === 'R') {
+                if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                    let page = getCurrentPage();
+                    if (appState.selectedObjectIdx !== null && page && page.objects[appState.selectedObjectIdx]) {
+                        let obj = page.objects[appState.selectedObjectIdx];
+                        if (obj.type === 'image') {
+                            obj.rotation = (obj.rotation || 0) + Math.PI / 4;
+                            saveToLocalStorage();
+                            redrawCanvas();
+                            showToast('Görsel döndürüldü.');
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- PDF EXPORT ---
+        async function exportToPDF() {
+            let proj = getCurrentProject();
+            if (!proj || !proj.pages || proj.pages.length === 0) {
+                showToast('Dışa aktarılacak sayfa bulunamadı!', 'error');
+                return;
+            }
+
+            showToast('PDF hazırlanıyor, lütfen bekleyin...');
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+            const pdfWidth = 595.28;
+            const pdfHeight = 841.89;
+
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = 800;
+            exportCanvas.height = 1131;
+            const ctx = exportCanvas.getContext('2d');
+
+            for (let i = 0; i < proj.pages.length; i++) {
+                if (i > 0) pdf.addPage();
+                let page = proj.pages[i];
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+                if (page.drawings) {
+                    page.drawings.forEach(path => {
+                        if (!path.points || path.points.length === 0) return;
+                        ctx.beginPath();
+                        ctx.strokeStyle = path.color || '#1e293b';
+                        ctx.lineWidth = path.size || 3;
+                        ctx.lineCap = 'round';
+                        ctx.lineJoin = 'round';
+                        if (path.isEraser) {
+                            ctx.strokeStyle = '#ffffff';
+                            ctx.lineWidth = path.size || 20;
+                        }
+                        ctx.moveTo(path.points[0].x, path.points[0].y);
+                        for (let j = 1; j < path.points.length; j++) {
+                            ctx.lineTo(path.points[j].x, path.points[j].y);
+                        }
+                        ctx.stroke();
+                    });
+                }
+
+                for (let obj of page.objects) {
+                    ctx.save();
+                    
+                    if (obj.rotation) {
+                        let cx = obj.x + obj.width / 2;
+                        let cy = obj.y + obj.height / 2;
+                        ctx.translate(cx, cy);
+                        ctx.rotate(obj.rotation);
+                        ctx.translate(-cx, -cy);
+                    }
+
+                    if (obj.type === 'text') {
+                        ctx.font = `${obj.italic ? 'italic ' : ''}${obj.bold ? 'bold ' : ''}${obj.fontSize || 24}px ${obj.fontFamily || 'Inter'}`;
+                        ctx.fillStyle = obj.color || '#1e293b';
+                        ctx.textBaseline = 'top';
+                        ctx.fillText(obj.text || '', obj.x, obj.y);
+                    } else if (obj.type === 'rect') {
+                        if (obj.fillColor) {
+                            ctx.fillStyle = obj.fillColor;
+                            ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                        }
+                        if (obj.color && obj.borderWidth > 0) {
+                            ctx.strokeStyle = obj.color;
+                            ctx.lineWidth = obj.borderWidth || 2;
+                            ctx.strokeRect(obj.x, obj.y, obj.width, obj.height);
+                        }
+                    } else if (obj.type === 'circle') {
+                        ctx.beginPath();
+                        let rx = obj.width / 2;
+                        let ry = obj.height / 2;
+                        let cx = obj.x + rx;
+                        let cy = obj.y + ry;
+                        ctx.ellipse(cx, cy, Math.abs(rx), Math.abs(ry), 0, 0, Math.PI * 2);
+                        if (obj.fillColor) {
+                            ctx.fillStyle = obj.fillColor;
+                            ctx.fill();
+                        }
+                        if (obj.color) {
+                            ctx.strokeStyle = obj.color;
+                            ctx.lineWidth = obj.borderWidth || 2;
+                            ctx.stroke();
+                        }
+                    } else if (obj.type === 'line') {
+                        ctx.beginPath();
+                        ctx.strokeStyle = obj.color || '#4f46e5';
+                        ctx.lineWidth = obj.borderWidth || 3;
+                        ctx.moveTo(obj.x, obj.y);
+                        ctx.lineTo(obj.x + obj.width, obj.y + obj.height);
+                        ctx.stroke();
+                    } else if (obj.type === 'arrow') {
+                        let x1 = obj.x, y1 = obj.y, x2 = obj.x + obj.width, y2 = obj.y + obj.height;
+                        ctx.beginPath();
+                        ctx.strokeStyle = obj.color || '#4f46e5';
+                        ctx.lineWidth = obj.borderWidth || 3;
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+
+                        let angle = Math.atan2(y2 - y1, x2 - x1);
+                        let headLen = 15;
+                        ctx.beginPath();
+                        ctx.fillStyle = obj.color || '#4f46e5';
+                        ctx.moveTo(x2, y2);
+                        ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+                        ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+                        ctx.fill();
+                    } else if (obj.type === 'image' && obj.src) {
+                        let img = await loadImageAsync(obj.src);
+                        if (img) {
+                            ctx.drawImage(img, obj.x, obj.y, obj.width, obj.height);
+                        }
+                    }
+                    ctx.restore();
+                }
+
+                let imgData = exportCanvas.toDataURL('image/jpeg', 0.95);
+                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            }
+
+            let fileName = (proj.name || 'PDF_engineer_Sunum').replace(/[^a-zA-Z0-9]/g, '_') + '.pdf';
+            pdf.save(fileName);
+            showToast('PDF başarıyla indirildi!');
+        }
+
+        function loadImageAsync(src) {
+            return new Promise((resolve) => {
+                let img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(null);
+                img.src = src;
+            });
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+    </script>
 </body>
 </html>
