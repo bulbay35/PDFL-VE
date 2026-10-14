@@ -31,10 +31,19 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
         canvas { touch-action: none; }
-        /* Mobil ve Tablet Uyumluluğu İyileştirmeleri */
+        
+        /* Mobil Genişletilmiş Çalışma Alanı ve Katman Ayarları */
         @media (max-width: 768px) {
             #canvas-scroll-container {
                 -webkit-overflow-scrolling: touch;
+                padding: 12px 6px !important;
+            }
+            #canvas-wrapper {
+                max-width: 98vw !important;
+            }
+            #right-sidebar {
+                max-height: 45vh !important;
+                overflow-y: auto !important;
             }
         }
     </style>
@@ -64,6 +73,10 @@
                     <button onclick="toggleDarkMode()" class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-600 dark:text-slate-300" title="Tema Değiştir">
                         <i data-lucide="sun" class="w-5 h-5 dark:hidden"></i>
                         <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
+                    </button>
+                    <button onclick="openImgToPdfView()" class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 sm:px-4 py-2.5 rounded-xl font-medium shadow-md transition active:scale-95 text-xs sm:text-sm">
+                        <i data-lucide="file-image" class="w-4 h-4"></i>
+                        <span>PNG/JPG → PDF</span>
                     </button>
                     <button onclick="openNewProjectModal()" class="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-3 sm:px-4 py-2.5 rounded-xl font-medium shadow-lg shadow-primary-500/25 transition active:scale-95 text-xs sm:text-sm">
                         <i data-lucide="plus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
@@ -123,7 +136,6 @@
         <div id="view-editor" class="hidden flex-1 flex flex-col h-full overflow-hidden bg-slate-100 dark:bg-slate-950">
             <!-- Editor Top Toolbar -->
             <header class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 sm:px-4 flex items-center justify-between z-30 shrink-0 shadow-sm gap-2">
-                <!-- Left: Back & Project Name -->
                 <div class="flex items-center gap-2 sm:gap-3 min-w-0">
                     <button onclick="backToHome()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition flex items-center gap-1.5 text-sm font-medium shrink-0" title="Projelerime Dön">
                         <i data-lucide="arrow-left" class="w-5 h-5"></i>
@@ -137,7 +149,6 @@
                     <span id="autosave-status" class="text-[10px] text-slate-400 hidden md:inline shrink-0">(Kaydedildi)</span>
                 </div>
 
-                <!-- Center: History & Zoom Controls (Hidden on very small screens) -->
                 <div class="hidden lg:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shrink-0">
                     <button onclick="undoAction()" class="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition" title="Geri Al (Ctrl+Z)">
                         <i data-lucide="corner-up-left" class="w-4 h-4"></i>
@@ -156,7 +167,6 @@
                     <button onclick="zoomFit()" class="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition text-xs font-medium px-2" title="Ekrana Sığdır">Fit</button>
                 </div>
 
-                <!-- Right: Actions & Export -->
                 <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
                     <button onclick="exportToPDF()" class="flex items-center gap-1.5 bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white px-3 sm:px-4 py-2 rounded-xl font-medium shadow-md shadow-primary-500/20 transition active:scale-95 text-xs sm:text-sm">
                         <i data-lucide="file-down" class="w-4 h-4"></i>
@@ -171,7 +181,7 @@
 
             <!-- Editor Workspace Body -->
             <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-                <!-- LEFT PANEL: Thumbnails & Page Management -->
+                <!-- LEFT PANEL: Thumbnails -->
                 <aside id="left-sidebar" class="w-full md:w-56 lg:w-60 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col z-20 shrink-0 transition-all duration-300 max-h-28 md:max-h-none">
                     <div class="p-2.5 sm:p-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                         <h3 class="font-semibold text-xs text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
@@ -182,9 +192,7 @@
                             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                         </button>
                     </div>
-                    <div id="pages-thumbnail-list" class="flex-1 overflow-y-auto md:overflow-y-auto overflow-x-auto p-2.5 sm:p-3 flex md:flex-col flex-row gap-2.5 custom-scrollbar">
-                        <!-- Thumbnail items generated dynamically -->
-                    </div>
+                    <div id="pages-thumbnail-list" class="flex-1 overflow-y-auto md:overflow-y-auto overflow-x-auto p-2.5 sm:p-3 flex md:flex-col flex-row gap-2.5 custom-scrollbar"></div>
                     <div class="hidden md:flex p-2.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 items-center justify-between text-xs text-slate-500">
                         <button onclick="duplicateActivePage()" class="hover:text-primary-600 flex items-center gap-1 transition">
                             <i data-lucide="copy" class="w-3 h-3"></i> Kopyala
@@ -195,9 +203,8 @@
                     </div>
                 </aside>
 
-                <!-- CENTER WORKSPACE: Tools & Canvas Container -->
+                <!-- CENTER WORKSPACE -->
                 <main class="flex-1 flex flex-col overflow-hidden relative bg-slate-100 dark:bg-slate-950">
-                    <!-- Floating Clean Toolbar -->
                     <div class="absolute top-2 sm:top-3 left-1/2 -translate-x-1/2 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 p-1 sm:p-1.5 rounded-xl shadow-md flex items-center gap-0.5 sm:gap-1 max-w-[95vw] overflow-x-auto custom-scrollbar">
                         <button onclick="setTool('select')" id="tool-select" class="tool-btn p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition bg-slate-200 dark:bg-slate-800 shrink-0" title="Seç / Taşı">
                             <i data-lucide="mouse-pointer" class="w-4 h-4"></i>
@@ -219,13 +226,11 @@
                             <i data-lucide="minus" class="w-4 h-4"></i>
                         </button>
                         <div class="w-[1px] h-4 bg-slate-200 dark:border-slate-700 mx-0.5 shrink-0"></div>
-                        <!-- Pen Tool -->
                         <div class="relative shrink-0">
                             <button onclick="setTool('brush')" ondblclick="openToolSettings('brush')" id="tool-brush" class="tool-btn p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition flex items-center gap-1" title="Kalem">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </button>
                         </div>
-                        <!-- Eraser Tool -->
                         <div class="relative shrink-0">
                             <button onclick="setTool('eraser')" ondblclick="openToolSettings('eraser')" id="tool-eraser" class="tool-btn p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition flex items-center gap-1" title="Silgi">
                                 <i data-lucide="eraser" class="w-4 h-4"></i>
@@ -239,16 +244,16 @@
                         </label>
                     </div>
 
-                    <!-- Canvas Scroll Wrapper -->
-                    <div id="canvas-scroll-container" class="flex-1 overflow-auto p-4 sm:p-8 md:p-16 flex items-center justify-center custom-scrollbar">
+                    <!-- Canvas Scroll Wrapper (Mobil Uyum Genişletilmiş) -->
+                    <div id="canvas-scroll-container" class="flex-1 overflow-auto p-2 sm:p-8 md:p-16 flex items-center justify-center custom-scrollbar">
                         <div id="canvas-wrapper" class="relative bg-white shadow-xl rounded-md transition-transform origin-center overflow-hidden shrink-0" style="width: 800px; height: 1131px; max-width: none;">
                             <canvas id="main-canvas" width="800" height="1131" class="absolute inset-0 w-full h-full cursor-crosshair"></canvas>
                         </div>
                     </div>
                 </main>
 
-                <!-- RIGHT PANEL: Object Properties & Inspector -->
-                <aside id="right-sidebar" class="w-full md:w-64 border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col z-20 shrink-0 custom-scrollbar overflow-y-auto max-h-40 md:max-h-none">
+                <!-- RIGHT PANEL: Inspector (Mobilde Dikey Kaydırılabilir) -->
+                <aside id="right-sidebar" class="w-full md:w-64 border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col z-20 shrink-0 custom-scrollbar overflow-y-auto">
                     <div class="p-2.5 sm:p-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                         <h3 class="font-semibold text-xs text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
                             <i data-lucide="sliders" class="w-3.5 h-3.5 text-primary-500"></i>
@@ -257,17 +262,13 @@
                         <span id="selected-object-type" class="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">Seçim Yok</span>
                     </div>
 
-                    <!-- Inspector Content -->
                     <div id="inspector-content" class="p-3 flex flex-col gap-4 text-xs">
-                        <!-- Default info when nothing selected -->
                         <div id="inspector-empty" class="text-center py-4 md:py-8 text-slate-400">
                             <i data-lucide="mouse-pointer-click" class="w-6 h-6 mx-auto mb-2 opacity-50"></i>
                             <p class="text-[11px]">Düzenlemek için bir nesne seçin.</p>
                         </div>
 
-                        <!-- Dynamic Inspector Form -->
                         <div id="inspector-form" class="hidden flex flex-col gap-3">
-                            <!-- Position & Size -->
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-medium text-slate-500">Konum & Boyut</label>
                                 <div class="grid grid-cols-2 gap-2">
@@ -290,7 +291,15 @@
                                 </div>
                             </div>
 
-                            <!-- Text Specific Properties -->
+                            <!-- Image Rotate Option Button -->
+                            <div id="prop-section-image" class="hidden flex flex-col gap-1.5 pt-2 border-t border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-medium text-slate-500">Görsel İşlemleri</label>
+                                <button onclick="rotateSelectedImage()" class="w-full py-1.5 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 hover:bg-primary-100 rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                                    <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+                                    90° Döndür
+                                </button>
+                            </div>
+
                             <div id="prop-section-text" class="hidden flex flex-col gap-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
                                 <label class="text-[11px] font-medium text-slate-500">Metin Ayarları</label>
                                 <div>
@@ -318,7 +327,6 @@
                                 </div>
                             </div>
 
-                            <!-- Color Properties -->
                             <div class="flex flex-col gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                                 <label class="text-[11px] font-medium text-slate-500">Renkler</label>
                                 <div class="grid grid-cols-2 gap-2">
@@ -333,8 +341,7 @@
                                 </div>
                             </div>
 
-                            <!-- Layer Actions -->
-                            <div class="flex flex-col gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                            <div class="flex flex-col gap-2 pt-2 border-t border-slate-200 dark:border-slate-800 mb-6">
                                 <label class="text-[11px] font-medium text-slate-500">Katman & İşlemler</label>
                                 <div class="grid grid-cols-2 gap-1.5">
                                     <button onclick="bringForward()" class="py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded text-[11px] font-medium transition">Öne Al</button>
@@ -350,6 +357,45 @@
                         </div>
                     </div>
                 </aside>
+            </div>
+        </div>
+
+        <!-- VIEW 3: GÖRSEL PDF DÖNÜŞTÜRÜCÜ MODÜLÜ -->
+        <div id="view-imgto-pdf" class="hidden flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 dark:bg-slate-900 p-4 sm:p-8">
+            <div class="max-w-2xl w-full mx-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-xl flex flex-col gap-6">
+                <!-- Top Nav / Header -->
+                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary-600 to-indigo-400 flex items-center justify-center text-white shadow-md">
+                            <i data-lucide="layers" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold bg-gradient-to-r from-primary-600 to-indigo-500 bg-clip-text text-transparent">PDF LİVA</h1>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Görsel → PDF Dönüştürücü</p>
+                        </div>
+                    </div>
+                    <button onclick="backToHome()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition flex items-center gap-1 text-xs font-semibold">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Ana Sayfa
+                    </button>
+                </div>
+
+                <!-- Form Controls -->
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1 text-slate-700 dark:text-slate-300">PDF Dosya Adı:</label>
+                        <input type="text" id="converterPdfName" value="Belge" placeholder="Örn: Belgem" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1 text-slate-700 dark:text-slate-300">Sayfa Sayısı:</label>
+                        <input type="text" id="converterPageCount" placeholder="Örn: 3" inputmode="numeric" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    </div>
+                    <button onclick="setupConverterPages()" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 rounded-xl transition shadow-md text-sm">Sayfaları Oluştur</button>
+                </div>
+
+                <!-- Generated Dynamic Page Upload Cards -->
+                <div id="converterPagesArea" class="flex flex-col gap-4"></div>
+
+                <button id="converterDownloadBtn" onclick="generateConverterPDF()" class="hidden w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-md text-sm">PDF İndir</button>
             </div>
         </div>
 
@@ -382,9 +428,14 @@
                     </div>
                 </div>
 
-                <div class="flex items-center justify-end gap-2 pt-2">
-                    <button onclick="closeNewProjectModal()" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">İptal</button>
-                    <button onclick="createProjectSubmit()" class="px-5 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium shadow-md shadow-primary-500/25 transition">Oluştur</button>
+                <div class="flex items-center justify-between pt-2">
+                    <button onclick="closeNewProjectModal(); openImgToPdfView();" class="text-emerald-600 dark:text-emerald-400 text-xs font-semibold hover:underline flex items-center gap-1">
+                        <i data-lucide="image" class="w-3.5 h-3.5"></i> PNG/JPG Dönüştürücü Kullan
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="closeNewProjectModal()" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">İptal</button>
+                        <button onclick="createProjectSubmit()" class="px-5 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium shadow-md shadow-primary-500/25 transition">Oluştur</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -420,21 +471,21 @@
             projects: [],
             currentProjectId: null,
             activePageIdx: 0,
-            activeTool: 'select', // select, text, rect, circle, arrow, line, brush, eraser
+            activeTool: 'select',
             zoom: 1,
             isDarkMode: false,
-            // Drawing & Interaction state
             isDrawing: false,
             isDragging: false,
             isResizing: false,
             selectedObjectIdx: null,
             dragStartX: 0,
             dragStartY: 0,
-            // Tool settings
             penColor: '#1e293b',
             penSize: 4,
             eraserSize: 20
         };
+
+        let converterPageData = [];
 
         function getCurrentProject() {
             return appState.projects.find(p => p.id === appState.currentProjectId);
@@ -463,17 +514,15 @@
             canvas.addEventListener('touchmove', handleCanvasTouchMove, { passive: false });
             canvas.addEventListener('touchend', handleCanvasTouchEnd);
 
-            // Responsive Initial Zoom Adjustment for Small Screens / Mobile
             autoFitMobileZoom();
             window.addEventListener('resize', autoFitMobileZoom);
         });
 
         function autoFitMobileZoom() {
             if (window.innerWidth < 768) {
-                // Mobilde çalışma alanını ekrana sığdırmak için otomatik ölçeklendirme
-                let containerWidth = window.innerWidth - 32;
+                let containerWidth = window.innerWidth - 16;
                 let calculatedZoom = containerWidth / 800;
-                if (calculatedZoom < 0.35) calculatedZoom = 0.35;
+                if (calculatedZoom < 0.4) calculatedZoom = 0.4;
                 if (calculatedZoom > 1) calculatedZoom = 1;
                 appState.zoom = parseFloat(calculatedZoom.toFixed(2));
                 applyZoom();
@@ -663,6 +712,121 @@
             }
         }
 
+        // --- GÖRSEL TO PDF CONVERTER MODULE ---
+        function openImgToPdfView() {
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-editor').classList.add('hidden');
+            document.getElementById('view-imgto-pdf').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function setupConverterPages() {
+            const countInput = document.getElementById('converterPageCount').value.trim();
+            const count = parseInt(countInput, 10);
+
+            if (isNaN(count) || count <= 0) {
+                showToast('Lütfen geçerli bir sayfa sayısı girin.', 'error');
+                return;
+            }
+
+            const pagesArea = document.getElementById('converterPagesArea');
+            pagesArea.innerHTML = '';
+            converterPageData = new Array(count).fill(null);
+
+            for (let i = 0; i < count; i++) {
+                const card = document.createElement('div');
+                card.className = 'border border-dashed border-slate-300 dark:border-slate-700 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 flex flex-col gap-2';
+                card.innerHTML = `
+                    <h3 class="font-semibold text-sm text-slate-800 dark:text-slate-200">Sayfa ${i + 1}</h3>
+                    <input type="file" class="text-xs text-slate-500" accept="image/png, image/jpeg" onchange="handleConverterImageSelect(event, ${i})">
+                    <img id="converter-preview-${i}" class="hidden max-h-44 object-contain rounded-lg mt-2 border border-slate-200 dark:border-slate-800">
+                `;
+                pagesArea.appendChild(card);
+            }
+
+            document.getElementById('converterDownloadBtn').classList.remove('hidden');
+            showToast(`${count} sayfa alanı hazırlandı.`);
+        }
+
+        function handleConverterImageSelect(event, index) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!['image/png', 'image/jpeg'].includes(file.type)) {
+                showToast('Lütfen yalnızca PNG veya JPG formatında görsel seçin.', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                converterPageData[index] = {
+                    dataUrl: e.target.result,
+                    format: file.type === 'image/png' ? 'PNG' : 'JPEG'
+                };
+                
+                const previewImg = document.getElementById(`converter-preview-${index}`);
+                previewImg.src = e.target.result;
+                previewImg.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function generateConverterPDF() {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+            const pdfNameInput = document.getElementById('converterPdfName').value.trim() || 'Belge';
+            const emptyPages = [];
+
+            converterPageData.forEach((data, i) => {
+                if (!data) emptyPages.push(i + 1);
+            });
+
+            if (emptyPages.length > 0) {
+                showToast(`Lütfen şu sayfalar için görsel seçin: ${emptyPages.join(', ')}`, 'error');
+                return;
+            }
+
+            showToast('PDF hazırlanıyor, lütfen bekleyin...');
+
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+
+            for (let i = 0; i < converterPageData.length; i++) {
+                if (i > 0) pdf.addPage();
+
+                const imgObj = converterPageData[i];
+                const imgProps = await new Promise((resolve) => {
+                    const img = new Image();
+                    img.src = imgObj.dataUrl;
+                    img.onload = () => {
+                        let w = img.width;
+                        let h = img.height;
+                        const ratio = w / h;
+
+                        let renderW = pageWidth;
+                        let renderH = pageWidth / ratio;
+
+                        if (renderH > pageHeight) {
+                            renderH = pageHeight;
+                            renderW = pageHeight * ratio;
+                        }
+
+                        const x = (pageWidth - renderW) / 2;
+                        const y = (pageHeight - renderH) / 2;
+
+                        resolve({ x, y, w: renderW, h: renderH });
+                    };
+                });
+
+                pdf.addImage(imgObj.dataUrl, imgObj.format, imgProps.x, imgProps.y, imgProps.w, imgProps.h);
+            }
+
+            pdf.save(`${pdfNameInput}.pdf`);
+            showToast('PDF başarıyla indirildi!');
+        }
+
         // --- EDITOR NAVIGATION ---
         function openProject(id) {
             appState.currentProjectId = id;
@@ -674,6 +838,7 @@
 
             document.getElementById('editor-project-title').textContent = proj.name;
             document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-imgto-pdf').classList.add('hidden');
             document.getElementById('view-editor').classList.remove('hidden');
 
             renderThumbnails();
@@ -686,6 +851,7 @@
         function backToHome() {
             appState.currentProjectId = null;
             document.getElementById('view-editor').classList.add('hidden');
+            document.getElementById('view-imgto-pdf').classList.add('hidden');
             document.getElementById('view-home').classList.remove('hidden');
             renderProjectsList();
         }
@@ -952,6 +1118,19 @@
             e.target.value = '';
         }
 
+        function rotateSelectedImage() {
+            let page = getCurrentPage();
+            if (appState.selectedObjectIdx !== null && page && page.objects[appState.selectedObjectIdx]) {
+                let obj = page.objects[appState.selectedObjectIdx];
+                if (obj.type === 'image') {
+                    obj.rotation = (obj.rotation || 0) + Math.PI / 2;
+                    saveToLocalStorage();
+                    redrawCanvas();
+                    showToast('Görsel 90° döndürüldü.');
+                }
+            }
+        }
+
         // --- CANVAS RENDERING ---
         function redrawCanvas() {
             const canvas = document.getElementById('main-canvas');
@@ -1061,7 +1240,6 @@
                     img.src = obj.src;
                 }
 
-                // Selection box & Resize handle
                 if (idx === appState.selectedObjectIdx) {
                     ctx.strokeStyle = '#6366f1';
                     ctx.lineWidth = 2;
@@ -1076,7 +1254,7 @@
             });
         }
 
-        // --- MOUSE & TOUCH INTERACTION WITH RESIZE & DRAG ---
+        // --- MOUSE & TOUCH INTERACTION ---
         function getCanvasCoordinates(e) {
             const canvas = document.getElementById('main-canvas');
             const rect = canvas.getBoundingClientRect();
@@ -1187,7 +1365,7 @@
 
         function handleCanvasTouchStart(e) {
             if (e.target.id === 'main-canvas') {
-                e.preventDefault(); // Sayfanın kaydırılmasını önleyerek touch çizimi/seçimi kararlı hale getirir
+                e.preventDefault();
             }
             handleCanvasMouseDown(e);
         }
@@ -1228,6 +1406,13 @@
             document.getElementById('prop-y').value = Math.round(obj.y);
             document.getElementById('prop-w').value = Math.round(obj.width);
             document.getElementById('prop-h').value = Math.round(obj.height);
+
+            let imgSection = document.getElementById('prop-section-image');
+            if (obj.type === 'image') {
+                imgSection.classList.remove('hidden');
+            } else {
+                imgSection.classList.add('hidden');
+            }
 
             let textSection = document.getElementById('prop-section-text');
             if (obj.type === 'text') {
@@ -1373,7 +1558,7 @@
                     if (appState.selectedObjectIdx !== null && page && page.objects[appState.selectedObjectIdx]) {
                         let obj = page.objects[appState.selectedObjectIdx];
                         if (obj.type === 'image') {
-                            obj.rotation = (obj.rotation || 0) + Math.PI / 4;
+                            obj.rotation = (obj.rotation || 0) + Math.PI / 2;
                             saveToLocalStorage();
                             redrawCanvas();
                             showToast('Görsel döndürüldü.');
